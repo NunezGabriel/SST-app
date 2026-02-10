@@ -1,20 +1,18 @@
 const express = require("express");
 
 const app = express();
-app.get("/", (req, res) => {
-  res.sendFile("./index.html", { root: __dirname });
+
+app.get("/api/user", (req, res) => {
+  res.json({ message: "Data charged!" });
 });
 
-app.get("/products", (req, res) => {
-  res.send("Lista de productos");
-});
+app.use(express.json());
+app.use(express.text());
+app.use(express.urlencoded({ extended: false }));
 
-app.post("/products", (req, res) => {
-  res.send("Producto creado");
-});
-
-app.put("/products:id", (req, res) => {
-  res.send("Producto editado correctamente");
+app.post("/api/user", (req, res) => {
+  console.log("Data received:", req.body);
+  res.json({ message: "Data received successfully!" });
 });
 
 app.listen(3000, () => {

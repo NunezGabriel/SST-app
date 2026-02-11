@@ -1,6 +1,7 @@
 "use client";
 
 import LayoutComponent from "@/components/layoutComponent";
+import KpiComponent from "@/components/kpiComponent";
 import {
   BookOpen,
   Bell,
@@ -65,51 +66,29 @@ const DashboardView = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-gray-600 text-sm font-medium mb-2">
-              Charlas Completadas
-            </h3>
-            <div className="flex justify-between items-end mb-3">
-              <span className="text-3xl font-bold text-gray-900">24/30</span>
-              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                80%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-[#003366] h-2 rounded-full"
-                style={{ width: "80%" }}
-              ></div>
-            </div>
-          </div>
+          <KpiComponent
+            title="Charlas Completadas"
+            value="24/30"
+            percentage={80}
+            showProgressBar={true}
+          />
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-gray-600 text-sm font-medium mb-2">
-              Cumplimiento
-            </h3>
-            <div className="flex justify-between items-end mb-3">
-              <span className="text-3xl font-bold text-gray-900">85%</span>
-              <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                85%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-[#003366] h-2 rounded-full"
-                style={{ width: "85%" }}
-              ></div>
-            </div>
-          </div>
+          <KpiComponent
+            title="Cumplimiento"
+            value="85%"
+            percentage={85}
+            showProgressBar={true}
+          />
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 relative">
-            <div className="absolute top-4 right-4 text-red-500">
-              <AlertCircle size={20} />
-            </div>
-            <h3 className="text-gray-600 text-sm font-medium mb-2">
-              Alertas Pendientes
-            </h3>
-            <span className="text-3xl font-bold text-gray-900">3</span>
-          </div>
+          <KpiComponent
+            title="Alertas Pendientes"
+            value="3"
+            icon={AlertCircle}
+            showIcon={true}
+            iconPosition="top-right"
+            iconColor="text-red-500"
+            showProgressBar={false}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

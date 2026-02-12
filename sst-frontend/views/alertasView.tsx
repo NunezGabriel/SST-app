@@ -119,8 +119,8 @@ export default function AlertasView() {
               time={a.time}
               isNew={!!a.isNew}
               read={!!a.read}
-              onDelete={deleteAlert}
-              onMarkRead={markRead}
+              onDelete={(id) => deleteAlert(id as number)}
+              onMarkRead={(id) => markRead(id as number)}
             />
           ))}
         </div>

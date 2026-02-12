@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { JSX } from "react";
 import { useRouter } from "next/navigation";
 import ProfileCard from "@/components/ProfileCard";
 import StatsCard from "@/components/StatsCard";
@@ -30,14 +30,30 @@ export default function ProfileView(): JSX.Element {
 
         <div className="relative z-10 flex flex-col items-center">
           <div className="-mt-8">
-            <ProfileCard name="Juan Desarrollador" email="juan.dev@empresa.com" />
+            <ProfileCard
+              name="Juan Desarrollador"
+              email="juan.dev@empresa.com"
+            />
           </div>
 
           <div className="mt-6 w-full">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatsCard soft label="Charlas Completadas" value={<span className="text-3xl font-bold">24/30</span>} progress={80} />
-              <StatsCard soft label="Cumplimiento" value={<span className="text-3xl font-bold">85%</span>} progress={85} />
-              <StatsCard label="Alertas Pendientes" value={<span className="text-3xl font-bold">3</span>} />
+              <StatsCard
+                soft
+                label="Charlas Completadas"
+                value={<span className="text-3xl font-bold">24/30</span>}
+                progress={80}
+              />
+              <StatsCard
+                soft
+                label="Cumplimiento"
+                value={<span className="text-3xl font-bold">85%</span>}
+                progress={85}
+              />
+              <StatsCard
+                label="Alertas Pendientes"
+                value={<span className="text-3xl font-bold">3</span>}
+              />
             </div>
 
             <div className="mt-6 flex justify-center">
@@ -54,9 +70,22 @@ export default function ProfileView(): JSX.Element {
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InfoCard title="Información">
                 <ul className="space-y-2 text-sm text-gray-700">
-                  <li><span className="font-medium text-slate-700">Cargo:</span> Ingeniero Fullstack</li>
-                  <li><span className="font-medium text-slate-700">Ubicación:</span> Remoto - Perú</li>
-                  <li><span className="font-medium text-slate-700">Última sesión:</span> 2026-02-10 09:12</li>
+                  <li>
+                    <span className="font-medium text-slate-700">Cargo:</span>{" "}
+                    Ingeniero Fullstack
+                  </li>
+                  <li>
+                    <span className="font-medium text-slate-700">
+                      Ubicación:
+                    </span>{" "}
+                    Remoto - Perú
+                  </li>
+                  <li>
+                    <span className="font-medium text-slate-700">
+                      Última sesión:
+                    </span>{" "}
+                    2026-02-10 09:12
+                  </li>
                 </ul>
               </InfoCard>
 

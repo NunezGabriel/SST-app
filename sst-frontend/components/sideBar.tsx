@@ -37,6 +37,7 @@ const SideBar = () => {
     { icon: MessageSquare, label: "Charlas", href: "/charlas" },
     { icon: Bell, label: "Alertas", href: "/alertas", badge: 3 },
     { icon: BarChart3, label: "Reportes", href: "/reportes" },
+    { icon: User, label: "Gestión Usuarios", href: "/gestion-usuarios" },
     { icon: User, label: "Perfil", href: "/profile" },
   ];
 

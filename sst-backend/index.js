@@ -19,8 +19,8 @@ app.get("/api/cars", (req, res) => {
   res.json({ message: "Data charged!" });
 });
 
-app.get("/api/hello", (req, res) => {
-  res.send("Hello gabriel!");
+app.get("/api/conection", (req, res) => {
+  res.send("Hello ! Connection established. (-_-) ");
 });
 
 // Nueva ruta para productos (CRUD)

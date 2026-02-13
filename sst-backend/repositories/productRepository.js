@@ -1,9 +1,5 @@
 const prisma = require("../prisma");
 
-/**
- * Obtiene todos los productos
- * @returns {Promise<Array>} Lista de productos
- */
 function findAll() {
   return prisma.product.findMany({
     orderBy: {
@@ -12,22 +8,12 @@ function findAll() {
   });
 }
 
-/**
- * Obtiene un producto por su ID
- * @param {number} id - ID del producto
- * @returns {Promise<Object|null>} Producto encontrado o null
- */
 function findById(id) {
   return prisma.product.findUnique({
     where: { id },
   });
 }
 
-/**
- * Crea un nuevo producto
- * @param {Object} data - Datos del producto { name, price }
- * @returns {Promise<Object>} Producto creado
- */
 function create(data) {
   return prisma.product.create({
     data: {
@@ -37,12 +23,6 @@ function create(data) {
   });
 }
 
-/**
- * Actualiza un producto existente
- * @param {number} id - ID del producto
- * @param {Object} data - Datos a actualizar { name, price }
- * @returns {Promise<Object>} Producto actualizado
- */
 function update(id, data) {
   return prisma.product.update({
     where: { id },
@@ -53,11 +33,6 @@ function update(id, data) {
   });
 }
 
-/**
- * Elimina un producto
- * @param {number} id - ID del producto
- * @returns {Promise<Object>} Producto eliminado
- */
 function remove(id) {
   return prisma.product.delete({
     where: { id },

@@ -32,33 +32,38 @@ const DashboardView = () => {
           </div>
         </div>
 
-        <div className="bg-linear-to-r from-[#003366] to-[#004d80] rounded-2xl p-8 text-white">
-          <div className="flex justify-between items-start">
+        <div className="relative bg-gradient-to from-[#003366] via-[#4b2c82] to-[#0066a3] rounded-3xl p-8 md:p-12 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]"></div>
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]"></div>
+          <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-indigo-400 opacity-15 rounded-full blur-[80px]"></div>
+
+          
+          <div className="relative z-10 flex justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="bg-cyan-400 p-2 rounded-full">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-300 bg-opacity-20 backdrop-blur-sm flex items-center justify-center">
                   <MessageSquare size={20} className="text-[#003366]" />
                 </div>
-                <span className="text-cyan-400 font-semibold text-sm">
+                <span className="text-[#003366] font-semibold text-sm uppercase tracking-wider">
                   CHARLA DEL DÍA
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-3">
-                <Clock size={16} className="text-cyan-400" />
-                <span className="text-sm">5 min</span>
-                <span className="bg-cyan-400 bg-opacity-20 px-3 py-1 rounded-full text-xs font-medium">
+                <Clock size={16} className="text-[#003366]" />
+                <span className="text-sm text-black">5 min</span>
+                <span className="bg-[#003366] bg-opacity-20 px-3 py-1 rounded-full text-xs font-medium">
                   Seguridad
                 </span>
               </div>
-              <h2 className="text-3xl font-bold mb-3">
+              <h2 className="text-3xl font-bold mb-3 text-black">
                 Uso Correcto de EPP en Altura
               </h2>
-              <p className="text-gray-200 text-lg">
+              <p className="text-gray-500 text-lg">
                 Aprende las mejores prácticas para trabajos en alturas y el uso
                 adecuado del equipo de protección personal.
               </p>
             </div>
-            <button className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6">
+            <button className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6 shadow-lg">
               <Play size={18} fill="currentColor" />
               Comenzar Ahora
             </button>

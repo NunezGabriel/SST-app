@@ -117,7 +117,7 @@ const InfoCharlaModal: React.FC<InfoCharlaModalProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-1 transition-colors"
+                className="text-white hover:bg-white/50 hover:bg-opacity-20 rounded-lg p-1 transition-colors"
                 aria-label="Cerrar modal"
               >
                 <X className="w-6 h-6" />

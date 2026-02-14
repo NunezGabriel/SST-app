@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import SSTCharlaCard from "@/components/cards/sstCharlaCard";
 import InfoCharlaModal from "@/components/modals/infoCharlaModal";
-import { Search } from "lucide-react";
+import { Search, HardHat, AlertTriangle, FileText, Shield } from "lucide-react";
 
 interface Charla {
   id: string;
@@ -15,12 +14,53 @@ interface Charla {
   updatedTime: string;
 }
 
+const getTypeConfig = (type: string) => {
+  switch (type) {
+    case "epp":
+      return {
+        icon: HardHat,
+        barColor: "bg-blue-500",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
+      };
+    case "riesgo":
+      return {
+        icon: AlertTriangle,
+        barColor: "bg-yellow-500",
+        iconBg: "bg-yellow-100",
+        iconColor: "text-yellow-600",
+      };
+    case "obligaciones":
+      return {
+        icon: FileText,
+        barColor: "bg-green-500",
+        iconBg: "bg-green-100",
+        iconColor: "text-green-600",
+      };
+    case "protocolos":
+      return {
+        icon: Shield,
+        barColor: "bg-purple-500",
+        iconBg: "bg-purple-100",
+        iconColor: "text-purple-600",
+      };
+    default:
+      return {
+        icon: HardHat,
+        barColor: "bg-blue-500",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
+      };
+  }
+};
+
 const BibliotecaView = () => {
   const [selectedFilter, setSelectedFilter] = useState<
     "todos" | "epp" | "riesgo" | "obligaciones" | "protocolos"
   >("todos");
   const [selectedCharla, setSelectedCharla] = useState<Charla | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
   // Datos hardcodeados
   const allCharlas: Charla[] = [
@@ -93,10 +133,12 @@ const BibliotecaView = () => {
     { key: "protocolos" as const, label: "Protocolos", count: 15, icon: "🛡️" },
   ];
 
-  const filteredCharlas =
-    selectedFilter === "todos"
-      ? allCharlas
-      : allCharlas.filter((charla) => charla.type === selectedFilter);
+  const filteredCharlas = allCharlas.filter((charla) => {
+    const coincideFiltro = selectedFilter === "todos" || charla.type === selectedFilter;
+    const coincideBusqueda = charla.title.toLowerCase().includes(busqueda.toLowerCase()) ||
+      charla.description.toLowerCase().includes(busqueda.toLowerCase());
+    return coincideFiltro && coincideBusqueda;
+  });
 
   const handleOpenModal = (charla: Charla) => {
     setSelectedCharla(charla);
@@ -115,7 +157,7 @@ const BibliotecaView = () => {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Biblioteca de Seguridad
+              Documentacion en Seguridad
             </h1>
             <p className="text-gray-600">
               Accede a recursos, guías y protocolos de SST
@@ -129,7 +171,9 @@ const BibliotecaView = () => {
               <input
                 type="text"
                 placeholder="Busca riesgos laborales, equipos de protección, protocolos..."
-                className="w-full pl-12 pr-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -153,19 +197,48 @@ const BibliotecaView = () => {
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCharlas.map((charla) => (
-              <SSTCharlaCard
-                key={charla.id}
-                type={charla.type}
-                title={charla.title}
-                description={charla.description}
-                views={charla.views}
-                updatedTime={charla.updatedTime}
-                onReadMore={() => handleOpenModal(charla)}
-              />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredCharlas.map((charla) => {
+              const config = getTypeConfig(charla.type);
+              const IconComponent = config.icon;
+              return (
+                <button
+                  key={charla.id}
+                  onClick={() => handleOpenModal(charla)}
+                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-cyan-300 transition-all duration-200 flex flex-col group"
+                >
+                  {/* Barra de color superior */}
+                  <div className={`h-2 ${config.barColor}`}></div>
+                  
+                  {/* Contenido */}
+                  <div className="p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]">
+                    <div className={`w-16 h-16 rounded-full ${config.iconBg} group-hover:scale-110 flex items-center justify-center transition-transform`}>
+                      <IconComponent className={`w-8 h-8 ${config.iconColor}`} />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
+                        {charla.title}
+                      </h3>
+                      <p className="text-xs text-gray-500">{charla.views} vistas</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Mensaje si no hay resultados */}
+          {filteredCharlas.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg font-medium">
+                No se encontraron documentos
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Intenta con otros términos de búsqueda o cambia el filtro
+              </p>
+            </div>
+          )}
         </div>
       </LayoutComponent>
 

@@ -14,6 +14,9 @@ import {
   X,
   ArrowLeftFromLine,
   ArrowRightToLine,
+  FileSpreadsheet,
+  GraduationCap,
+  Shield
 } from "lucide-react";
 
 const SideBar = () => {
@@ -33,10 +36,20 @@ const SideBar = () => {
 
   const menuItems = [
     { icon: Home, label: "Inicio", href: "/dashboard" },
-    { icon: BookOpen, label: "Biblioteca", href: "/biblioteca" },
     { icon: MessageSquare, label: "Charlas", href: "/charlas" },
+    {
+      icon: BookOpen,
+      label: "Documentacion de seguridad",
+      href: "/biblioteca",
+    },
+    {
+      icon: FileSpreadsheet,
+      label: "Formatos de seguridad",
+      href: "/formatos",
+    },
+    { icon: Shield, label: "Induccion", href: "/induccion" },
     { icon: Bell, label: "Alertas", href: "/alertas", badge: 3 },
-    { icon: BarChart3, label: "Reportes", href: "/reportes" },
+    // { icon: BarChart3, label: "Reportes", href: "/reportes" },
     { icon: User, label: "Perfil", href: "/profile" },
   ];
 

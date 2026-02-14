@@ -14,6 +14,14 @@ export default function CreateContentView() {
 
   const [alertLevel, setAlertLevel] = useState("Media");
   const [alertMessage, setAlertMessage] = useState("");
+  // Charla quiz state
+  const [quizQuestion, setQuizQuestion] = useState("");
+  const [quizOptions, setQuizOptions] = useState(["Opción 1", "Opción 2", "Opción 3", "Opción 4"]);
+  const [correctIndex, setCorrectIndex] = useState<number | null>(0);
+  // Destinatarios
+  const [destinatarios, setDestinatarios] = useState("Todos");
+  // Recurso icon color
+  const [iconColor, setIconColor] = useState("Morado");
 
   const saveDraft = () => {
     // placeholder
@@ -92,6 +100,26 @@ export default function CreateContentView() {
                   <label className="block text-sm text-slate-700 mb-1">Contenido en Markdown</label>
                   <textarea value={markdown} onChange={(e) => setMarkdown(e.target.value)} className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-100 font-mono" rows={8} placeholder="# Título Principal\nEscribe el contenido en markdown..." />
                 </div>
+                {/* Quiz interactivo */}
+                <div className="mt-4 border border-cyan-100 bg-[#F1FBFF] rounded-xl p-4">
+                  <h4 className="font-semibold text-[#003366] mb-2">Quiz Interactivo</h4>
+                  <p className="text-sm text-gray-600 mb-3">Agrega una pregunta de comprensión</p>
+                  <div className="mb-3">
+                    <input value={quizQuestion} onChange={(e) => setQuizQuestion(e.target.value)} placeholder="Pregunta" className="w-full px-4 py-2 rounded-lg bg-white border border-gray-100" />
+                  </div>
+                  <div className="space-y-2">
+                    {quizOptions.map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <input value={opt} onChange={(e) => setQuizOptions((s) => s.map((v, i) => (i === idx ? e.target.value : v)))} className="flex-1 px-4 py-2 rounded-lg bg-white border border-gray-100" />
+                        {correctIndex === idx ? (
+                          <span className="text-sm bg-green-500 text-white px-3 py-1 rounded-md">✓ Correcta</span>
+                        ) : (
+                          <button onClick={() => setCorrectIndex(idx)} className="px-3 py-1 rounded-md bg-white border border-gray-200 text-sm hover:bg-blue-50">Marcar</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -115,10 +143,10 @@ export default function CreateContentView() {
                 </div>
                 <div>
                   <label className="block text-sm text-slate-700 mb-1">Destinatarios</label>
-                  <select className="w-full px-4 py-3 rounded-lg bg-white border border-gray-100">
-                    <option>Seleccionar destinatarios</option>
-                    <option>Todos</option>
-                    <option>Producción</option>
+                  <select value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} className="w-full px-4 py-3 rounded-lg bg-white border border-gray-100">
+                    <option value="Todos">Todos los usuarios</option>
+                    <option value="Departamento">Por departamento</option>
+                    <option value="Especificos">Usuarios específicos</option>
                   </select>
                 </div>
               </div>
@@ -128,15 +156,35 @@ export default function CreateContentView() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-slate-700 mb-1">Título del Recurso</label>
-                  <input placeholder="Ej: Manual de Seguridad" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-100" />
+                  <input placeholder="Ej: Guía de Uso de Casco" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-100" />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-700 mb-1">Categoría</label>
+                  <select className="w-full px-4 py-3 rounded-lg bg-white border border-gray-100">
+                    <option>EPP</option>
+                    <option>Riesgos</option>
+                    <option>Obligaciones</option>
+                    <option>Protocolos</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-slate-700 mb-1">Descripción</label>
                   <textarea className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-100" rows={4} />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-700 mb-1">Adjuntar archivo (opcional)</label>
-                  <input type="file" className="w-full" />
+                  <label className="block text-sm text-slate-700 mb-1">Contenido Completo</label>
+                  <textarea className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-100" rows={8} />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-700 mb-1">Color del ícono</label>
+                  <select value={iconColor} onChange={(e) => setIconColor(e.target.value)} className="w-full px-4 py-3 rounded-lg bg-white border border-gray-100">
+                    <option>Azul</option>
+                    <option>Verde</option>
+                    <option>Amarillo</option>
+                    <option>Morado</option>
+                    <option>Rojo</option>
+                  </select>
                 </div>
               </div>
             )}

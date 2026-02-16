@@ -6,9 +6,286 @@ datasource db {
   provider = "postgresql"
 }
 
-model Product {
-  id        Int      @id @default(autoincrement())
-  name      String
-  price     Float
-  createdAt DateTime @default(now())
+// ============================================
+// MODELO USUARIO
+// ============================================
+model Usuario {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(100)
+  apellido             String                 @db.VarChar(100)
+  dni                  String                 @unique @db.VarChar(20)
+  correo               String                 @unique @db.VarChar(150)
+  contrasena           String                 @db.VarChar(255)
+  tipo                 TipoUsuario            @default(WORKER)
+  activo               Boolean                @default(true)
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  // Relaciones
+  progresosCharlas     ProgresoCharla[]
+  visualizaciones      VisualizacionDocumento[]
+  logros               UsuarioLogro[]
+  notificaciones       Notificacion[]
+  intentosExamen       IntentoExamen[]
+  bloqueoExamen        BloqueoExamen?
+  
+  @@map("usuario")
 }
+
+enum TipoUsuario {
+  ADMIN
+  WORKER
+}
+
+// ============================================
+// MODELO CHARLA
+// ============================================
+model Charla {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(200)
+  enlace               String                 @db.Text
+  etiqueta             String?                @db.VarChar(100)
+  fechaCharla          DateTime               @map("fecha_charla") @db.Date
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  // Relaciones
+  progresos            ProgresoCharla[]
+  
+  @@map("charla")
+}
+
+// ============================================
+// MODELO PROGRESO CHARLA (Relación Usuario-Charla)
+// ============================================
+model ProgresoCharla {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @map("id_usuario")
+  idCharla             Int                    @map("id_charla")
+  estado               EstadoCharla           @default(PENDIENTE)
+  fechaCompletada      DateTime?              @map("fecha_completada")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  charla               Charla                 @relation(fields: [idCharla], references: [id], onDelete: Cascade)
+  
+  @@unique([idUsuario, idCharla])
+  @@map("progreso_charla")
+}
+
+enum EstadoCharla {
+  PENDIENTE
+  COMPLETADA
+}
+
+// ============================================
+// MODELO DOCUMENTO DE SEGURIDAD
+// ============================================
+model DocumentoSeguridad {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(200)
+  tipo                 TipoDocumento
+  enlace               String                 @db.Text
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  // Relaciones
+  visualizaciones      VisualizacionDocumento[]
+  
+  @@map("documento_seguridad")
+}
+
+enum TipoDocumento {
+  PROCEDIMIENTO
+  INSTRUCTIVO
+  MANUAL
+}
+
+// ============================================
+// MODELO VISUALIZACIÓN DOCUMENTO
+// ============================================
+model VisualizacionDocumento {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @map("id_usuario")
+  idDocumento          Int                    @map("id_documento")
+  estado               EstadoVisualizacion    @default(SIN_VER)
+  fechaVisualizacion   DateTime?              @map("fecha_visualizacion")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  documento            DocumentoSeguridad     @relation(fields: [idDocumento], references: [id], onDelete: Cascade)
+  
+  @@unique([idUsuario, idDocumento])
+  @@map("visualizacion_documento")
+}
+
+enum EstadoVisualizacion {
+  SIN_VER
+  VISTO
+}
+
+// ============================================
+// MODELO FORMATO
+// ============================================
+model Formato {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(200)
+  tipo                 String?                @db.VarChar(100)
+  enlace               String                 @db.Text
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  @@map("formato")
+}
+
+// ============================================
+// MODELO INDUCCIÓN
+// ============================================
+model Induccion {
+  id                   Int                    @id @default(autoincrement())
+  linkDiapo            String                 @map("link_diapo") @db.Text
+  linkPdf              String                 @map("link_pdf") @db.Text
+  linkVideo            String                 @map("link_video") @db.Text
+  duracion             Int                    // En minutos
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  @@map("induccion")
+}
+
+// ============================================
+// MODELO CONFIGURACIÓN EXAMEN
+// ============================================
+model ConfiguracionExamen {
+  id                   Int                    @id @default(autoincrement())
+  puntajeAprobatorio   Int                    @default(14) @map("puntaje_aprobatorio")
+  puntajeTotal         Int                    @default(20) @map("puntaje_total")
+  intentosMaximos      Int                    @default(3) @map("intentos_maximos")
+  tiempoEsperaMinutos  Int                    @default(10) @map("tiempo_espera_minutos")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  @@map("configuracion_examen")
+}
+
+// ============================================
+// MODELO PREGUNTA EXAMEN
+// ============================================
+model PreguntaExamen {
+  id                   Int                    @id @default(autoincrement())
+  pregunta             String                 @db.Text
+  opcionA              String                 @map("opcion_a") @db.VarChar(255)
+  opcionB              String                 @map("opcion_b") @db.VarChar(255)
+  opcionC              String                 @map("opcion_c") @db.VarChar(255)
+  opcionD              String                 @map("opcion_d") @db.VarChar(255)
+  respuestaCorrecta    RespuestaCorrecta      @map("respuesta_correcta")
+  activa               Boolean                @default(true)
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  @@map("pregunta_examen")
+}
+
+enum RespuestaCorrecta {
+  A
+  B
+  C
+  D
+}
+
+// ============================================
+// MODELO INTENTO EXAMEN
+// ============================================
+model IntentoExamen {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @map("id_usuario")
+  numeroIntento        Int                    @map("numero_intento")
+  puntajeObtenido      Int                    @map("puntaje_obtenido")
+  aprobado             Boolean
+  respuestasJson       Json?                  @map("respuestas_json")
+  fechaIntento         DateTime               @default(now()) @map("fecha_intento")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  
+  @@map("intento_examen")
+}
+
+// ============================================
+// MODELO BLOQUEO EXAMEN
+// ============================================
+model BloqueoExamen {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @unique @map("id_usuario")
+  intentosUsados       Int                    @default(0) @map("intentos_usados")
+  bloqueadoHasta       DateTime?              @map("bloqueado_hasta")
+  fechaUltimoIntento   DateTime?              @map("fecha_ultimo_intento")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  
+  @@map("bloqueo_examen")
+}
+
+// ============================================
+// MODELO LOGRO
+// ============================================
+model Logro {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(150)
+  descripcion          String?                @db.Text
+  icono                String?                @db.VarChar(100)
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  
+  // Relaciones
+  usuariosLogros       UsuarioLogro[]
+  
+  @@map("logro")
+}
+
+// ============================================
+// MODELO USUARIO LOGRO
+// ============================================
+model UsuarioLogro {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @map("id_usuario")
+  idLogro              Int                    @map("id_logro")
+  estado               EstadoLogro            @default(PENDIENTE)
+  fechaConseguido      DateTime?              @map("fecha_conseguido")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  logro                Logro                  @relation(fields: [idLogro], references: [id], onDelete: Cascade)
+  
+  @@unique([idUsuario, idLogro])
+  @@map("usuario_logro")
+}
+
+enum EstadoLogro {
+  PENDIENTE
+  CONSEGUIDO
+}
+
+// ============================================
+// MODELO NOTIFICACIÓN
+// ============================================
+model Notificacion {
+  id                   Int                    @id @default(autoincrement())
+  idUsuario            Int                    @map("id_usuario")
+  nombre               String                 @db.VarChar(200)
+  descripcion          String                 @db.Text
+  tipo                 TipoNotificacion
+  leida                Boolean                @default(false)
+  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
+  fechaLectura         DateTime?              @map("fecha_lectura")
+  
+  // Relaciones
+  usuario              Usuario                @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  
+  @@map("notificacion")
+}
+
+enum TipoNotificacion {
+  LOGRO
+  NUEVO
+  PENDIENTE
+}
+

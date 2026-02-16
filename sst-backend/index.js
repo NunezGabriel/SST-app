@@ -14,11 +14,6 @@ app.use(express.urlencoded({ extended: false }));
 // Servir la interfaz básica si tienes index.html
 app.use(express.static(path.join(__dirname)));
 
-// Rutas existentes de ejemplo
-app.get("/api/cars", (req, res) => {
-  res.json({ message: "Data charged!" });
-});
-
 app.get("/api/conection", (req, res) => {
   res.send("Hello ! Connection established. (-_-) ");
 });

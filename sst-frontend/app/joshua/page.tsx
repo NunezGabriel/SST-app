@@ -1,6 +1,7 @@
 "use client";
-import FormatosAdminView from "@/views/Admin/formatosAdminView";
+
+import AlertasAdminView from "@/views/Admin/alertasAdminView";
 
 export default function Page() {
-  return <FormatosAdminView />;
+  return <AlertasAdminView />;
 }

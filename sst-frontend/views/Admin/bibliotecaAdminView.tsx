@@ -3,7 +3,7 @@
 import { useState } from "react";
 import LayoutComponent from "@/components/layoutComponent";
 import InfoCharlaModal from "@/components/modals/infoCharlaModal";
-import { Search, HardHat, AlertTriangle, FileText, Shield } from "lucide-react";
+import { Search, HardHat, AlertTriangle, FileText, Shield, Edit3, Trash2, Plus } from "lucide-react";
 
 interface Charla {
   id: string;
@@ -12,6 +12,13 @@ interface Charla {
   description: string;
   views: number;
   updatedTime: string;
+}
+
+interface EditCharlaData {
+  id: string;
+  type: "epp" | "riesgo" | "obligaciones" | "protocolos";
+  title: string;
+  description: string;
 }
 
 const getTypeConfig = (type: string) => {
@@ -54,16 +61,14 @@ const getTypeConfig = (type: string) => {
   }
 };
 
-const BibliotecaView = () => {
+const BibliotecaAdminView = ({}: {}) => {
   const [selectedFilter, setSelectedFilter] = useState<
     "todos" | "epp" | "riesgo" | "obligaciones" | "protocolos"
   >("todos");
   const [selectedCharla, setSelectedCharla] = useState<Charla | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busqueda, setBusqueda] = useState("");
-
-  // Datos hardcodeados
-  const allCharlas: Charla[] = [
+  const [charlas, setCharlas] = useState<Charla[]>([
     {
       id: "1",
       type: "epp",
@@ -118,7 +123,10 @@ const BibliotecaView = () => {
       views: 334,
       updatedTime: "Actualizado hace 1 semana",
     },
-  ];
+  ]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editCharla, setEditCharla] = useState<EditCharlaData | null>(null);
+  const [isNew, setIsNew] = useState(false);
 
   const filterOptions = [
     { key: "todos" as const, label: "Todos", count: 120, icon: "📚" },
@@ -133,7 +141,7 @@ const BibliotecaView = () => {
     { key: "protocolos" as const, label: "Protocolos", count: 15, icon: "🛡️" },
   ];
 
-  const filteredCharlas = allCharlas.filter((charla) => {
+  const filteredCharlas = charlas.filter((charla) => {
     const coincideFiltro = selectedFilter === "todos" || charla.type === selectedFilter;
     const coincideBusqueda = charla.title.toLowerCase().includes(busqueda.toLowerCase()) ||
       charla.description.toLowerCase().includes(busqueda.toLowerCase());
@@ -150,10 +158,81 @@ const BibliotecaView = () => {
     setSelectedCharla(null);
   };
 
+  const handleEdit = (charla: Charla) => {
+    setEditCharla({
+      id: charla.id,
+      type: charla.type,
+      title: charla.title,
+      description: charla.description,
+    });
+    setEditOpen(true);
+    setIsNew(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("¿Eliminar documento? Esta acción no se puede deshacer.")) {
+      setCharlas((prev) => prev.filter((c) => c.id !== id));
+    }
+  };
+
+  const handleNewDocument = () => {
+    setEditCharla({
+      id: String(Math.max(0, ...charlas.map(c => parseInt(c.id))) + 1),
+      type: "epp",
+      title: "",
+      description: "",
+    });
+    setEditOpen(true);
+    setIsNew(true);
+  };
+
+  const handleSaveEdit = (data: EditCharlaData) => {
+    if (isNew) {
+      setCharlas((prev) => [
+        {
+          id: data.id,
+          type: data.type,
+          title: data.title,
+          description: data.description,
+          views: 0,
+          updatedTime: "Actualizado hace unos momentos",
+        },
+        ...prev,
+      ]);
+    } else {
+      setCharlas((prev) =>
+        prev.map((c) =>
+          c.id === data.id
+            ? {
+                ...c,
+                type: data.type,
+                title: data.title,
+                description: data.description,
+                updatedTime: "Actualizado recientemente",
+              }
+            : c
+        )
+      );
+    }
+    setEditOpen(false);
+    setIsNew(false);
+  };
+
   return (
     <>
       <LayoutComponent>
         <div className="min-h-screen p-8">
+          {/* Botón agregar nuevo documento */}
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={handleNewDocument}
+              className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#00BFFF] text-white font-bold shadow hover:bg-[#0099cc] transition text-base"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              <Plus className="w-5 h-5" /> Agregar Nuevo Documento
+            </button>
+          </div>
+
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -202,16 +281,15 @@ const BibliotecaView = () => {
               const config = getTypeConfig(charla.type);
               const IconComponent = config.icon;
               return (
-                <button
+                <div
                   key={charla.id}
-                  onClick={() => handleOpenModal(charla)}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-cyan-300 transition-all duration-200 flex flex-col group"
                 >
                   {/* Barra de color superior */}
                   <div className={`h-2 ${config.barColor}`}></div>
                   
                   {/* Contenido */}
-                  <div className="p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]">
+                  <div className="p-6 flex flex-col items-center justify-center gap-4 min-h-[250px] relative">
                     <div className={`w-16 h-16 rounded-full ${config.iconBg} group-hover:scale-110 flex items-center justify-center transition-transform`}>
                       <IconComponent className={`w-8 h-8 ${config.iconColor}`} />
                     </div>
@@ -221,8 +299,26 @@ const BibliotecaView = () => {
                       </h3>
                       <p className="text-xs text-gray-500">{charla.views} vistas</p>
                     </div>
+                    
+                    {/* Botones de acción */}
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 w-full justify-center">
+                      <button
+                        onClick={() => handleEdit(charla)}
+                        className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#E0F7FA] text-[#003366] font-semibold shadow border border-cyan-100 hover:bg-[#00BFFF] hover:text-white transition text-xs"
+                        style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}
+                      >
+                        <Edit3 className="w-4 h-4" /> Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(charla.id)}
+                        className="flex items-center gap-1 px-3 py-1 rounded-full bg-white text-red-600 font-semibold shadow border border-red-200 hover:bg-red-50 transition text-xs"
+                        style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}
+                      >
+                        <Trash2 className="w-4 h-4" /> Eliminar
+                      </button>
+                    </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -247,8 +343,134 @@ const BibliotecaView = () => {
         charla={selectedCharla}
         onClose={handleCloseModal}
       />
+{editOpen && editCharla && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
+
+      {/* Botón cerrar */}
+      <button
+        onClick={() => { setEditOpen(false); setIsNew(false); }}
+        className="absolute top-5 right-5 text-gray-400 hover:text-gray-600"
+      >
+        ✕
+      </button>
+
+      {/* Header */}
+      <h2 className="text-2xl font-bold text-[#003366]">
+        {isNew ? "Crear Formato" : "Editar Formato"}
+      </h2>
+      <p className="text-gray-500 mb-6">
+        Modifica los detalles del formato o plantilla
+      </p>
+
+      {/* Título */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Título del Formato
+        </label>
+        <input
+          type="text"
+          value={editCharla.title}
+          onChange={(e) =>
+            setEditCharla({ ...editCharla, title: e.target.value })
+          }
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+        />
+      </div>
+
+      {/* Categoría */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Categoría
+        </label>
+        <select
+          value={editCharla.type}
+          onChange={(e) =>
+            setEditCharla({
+              ...editCharla,
+              type: e.target.value as EditCharlaData["type"],
+            })
+          }
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+        >
+          <option value="epp">EPP</option>
+          <option value="riesgo">Riesgos</option>
+          <option value="obligaciones">Obligaciones</option>
+          <option value="protocolos">Protocolos</option>
+        </select>
+      </div>
+
+      {/* Descripción */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Descripción
+        </label>
+        <textarea
+          rows={3}
+          value={editCharla.description}
+          onChange={(e) =>
+            setEditCharla({ ...editCharla, description: e.target.value })
+          }
+          placeholder="Descripción breve del formato..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+        />
+      </div>
+
+      {/* Color del icono (visual solo) */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Color del ícono
+        </label>
+        <select className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none">
+          <option>Azul</option>
+          <option>Amarillo</option>
+          <option>Verde</option>
+          <option>Morado</option>
+        </select>
+      </div>
+
+      {/* Archivo adjunto */}
+      <div className="mb-6">
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Archivo Adjunto (URL)
+        </label>
+        <input
+          type="text"
+          placeholder="https://... o selecciona archivo"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          Formatos soportados: PDF, DOCX, XLSX
+        </p>
+      </div>
+
+      {/* Botones */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => { setEditOpen(false); setIsNew(false); }}
+          className="px-5 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={() => {
+            if (editCharla.title.trim()) {
+              handleSaveEdit(editCharla);
+            } else {
+              alert("Por favor ingresa un título");
+            }
+          }}
+          className="px-5 py-2 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
     </>
   );
 };
 
-export default BibliotecaView;
+export default BibliotecaAdminView;

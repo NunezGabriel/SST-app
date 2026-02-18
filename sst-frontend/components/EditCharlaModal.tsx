@@ -38,7 +38,7 @@ export default function EditCharlaModal({ open, onClose, charla, onSave }: {
   if (!open || !form) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backdropFilter:'blur(6px)', background:'rgba(255,255,255,0.7)'}}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 " >
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative font-inter">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-[#00BFFF] transition"

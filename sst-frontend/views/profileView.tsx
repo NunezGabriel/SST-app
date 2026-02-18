@@ -4,7 +4,7 @@ import React, { JSX } from "react";
 import { useRouter } from "next/navigation";
 import ProfileCard from "@/components/ProfileCard";
 import StatsCard from "@/components/StatsCard";
-import InfoCard from "@/components/InfoCard";
+import LayoutComponent from "@/components/layoutComponent";
 
 export default function ProfileView(): JSX.Element {
   const router = useRouter();
@@ -23,83 +23,60 @@ export default function ProfileView(): JSX.Element {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-lg p-8 relative overflow-hidden">
-        {/* Top gradient banner */}
-        <div className="absolute -top-6 left-6 right-6 h-28 bg-linear-to-r from-[#003366] to-[#004d80] rounded-xl" />
+    <LayoutComponent>
+      <main className="min-h-screen flex items-center justify-center p-6">
+        <div className="relative max-w-5xl w-full rounded-3xl shadow-2xl overflow-hidden ">
+          {/* Header gradient */}
+          <div className="relative bg-gradient-to from-[#003366] via-[#4b2c82] to-[#0066a3] p-12 text-white overflow-hidden">
+            {/* Glows */}
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]"></div>
+            <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]"></div>
+            <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-indigo-400 opacity-15 rounded-full blur-[80px]"></div>
 
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="-mt-8">
-            <ProfileCard
-              name="Juan Desarrollador"
-              email="juan.dev@empresa.com"
-            />
-          </div>
-
-          <div className="mt-6 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatsCard
-                soft
-                label="Charlas Completadas"
-                value={<span className="text-3xl font-bold">24/30</span>}
-                progress={80}
-              />
-              <StatsCard
-                soft
-                label="Cumplimiento"
-                value={<span className="text-3xl font-bold">85%</span>}
-                progress={85}
-              />
-              <StatsCard
-                label="Alertas Pendientes"
-                value={<span className="text-3xl font-bold">3</span>}
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <ProfileCard
+                name="Juan Desarrollador"
+                email="juan.dev@empresa.com"
               />
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <div className="bg-[#E6F7FB] rounded-full p-2 shadow-sm">
+            <div className="p-10">
+              {/* Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <StatsCard
+                  soft
+                  label="Charlas Completadas"
+                  value={<span>24/30</span>}
+                  progress={80}
+                />
+                <StatsCard
+                  soft
+                  label="Cumplimiento"
+                  value={<span>85%</span>}
+                  progress={85}
+                />
+                <StatsCard
+                  soft
+                  label="Alertas Pendientes"
+                  value={<span>3</span>}
+                />
+              </div>
+
+              {/* Botón sólido */}
+              <div className="mt-12 flex justify-center">
                 <button
                   onClick={handleLogout}
-                  className="bg-[#ef4444] text-white px-6 py-3 rounded-full shadow-md hover:opacity-95 transition"
+                  className="bg-[#ef4444] hover:bg-red-600 text-white px-8 py-3 rounded-full font-medium shadow-md transition-all duration-300 hover:scale-105"
                 >
                   Cerrar Sesión
                 </button>
               </div>
             </div>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InfoCard title="Información">
-                <ul className="space-y-2 text-sm text-gray-700">
-                  <li>
-                    <span className="font-medium text-slate-700">Cargo:</span>{" "}
-                    Ingeniero Fullstack
-                  </li>
-                  <li>
-                    <span className="font-medium text-slate-700">
-                      Ubicación:
-                    </span>{" "}
-                    Remoto - Perú
-                  </li>
-                  <li>
-                    <span className="font-medium text-slate-700">
-                      Última sesión:
-                    </span>{" "}
-                    2026-02-10 09:12
-                  </li>
-                </ul>
-              </InfoCard>
-
-              <InfoCard title="Actividad reciente">
-                <ul className="space-y-2 text-sm text-gray-700">
-                  <li>Completó la charla "Introducción a SST" • 2 días</li>
-                  <li>Subió su progreso de cumplimiento • 1 semana</li>
-                  <li>Actualizó su perfil • 3 semanas</li>
-                </ul>
-              </InfoCard>
-            </div>
           </div>
+
+          {/* Contenido sin background extra */}
         </div>
-      </div>
-    </main>
+      </main>
+    </LayoutComponent>
   );
 }

@@ -4,7 +4,7 @@ import DocumentacionAdminView from "@/views/admin/documentacionAdminView";
 type UserRole = "WORKER" | "ADMIN";
 
 // TODO: reemplazar con auth real (ej: getServerSession, useAuth, context, etc.)
-let MOCK_USER_ROLE: UserRole = "WORKER";
+let MOCK_USER_ROLE: UserRole = "ADMIN";
 
 export default function DocumentacionPage() {
   if (MOCK_USER_ROLE === "ADMIN") {

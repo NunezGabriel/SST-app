@@ -8,16 +8,27 @@ import {
   BookOpen,
   MessageSquare,
   Bell,
-  BarChart3,
   User,
   Menu,
   X,
   ArrowLeftFromLine,
   ArrowRightToLine,
   FileSpreadsheet,
-  GraduationCap,
-  Shield
+  Shield,
+  Users,
+  UserRoundCog,
 } from "lucide-react";
+
+// TODO: reemplazar con auth real
+const MOCK_USER_ROLE = "ADMIN" as "WORKER" | "ADMIN";
+
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  badge?: number;
+  isAdminSection?: boolean;
+}
 
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -25,16 +36,13 @@ const SideBar = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const menuItems = [
+  const baseItems: MenuItem[] = [
     { icon: Home, label: "Inicio", href: "/dashboard" },
     { icon: MessageSquare, label: "Charlas", href: "/charlas" },
     {
@@ -49,9 +57,27 @@ const SideBar = () => {
     },
     { icon: Shield, label: "Induccion", href: "/induccion" },
     { icon: Bell, label: "Alertas", href: "/alertas", badge: 3 },
-    // { icon: BarChart3, label: "Reportes", href: "/reportes" },
-    { icon: User, label: "Perfil", href: "/profile" },
   ];
+
+  const adminOnlyItems: MenuItem[] = [
+    {
+      icon: UserRoundCog,
+      label: "Usuarios",
+      href: "/admin-usuarios",
+      isAdminSection: true,
+    },
+  ];
+
+  const perfilItem: MenuItem = {
+    icon: User,
+    label: "Perfil",
+    href: "/profile",
+  };
+
+  const menuItems =
+    MOCK_USER_ROLE === "ADMIN"
+      ? [...baseItems, ...adminOnlyItems, perfilItem]
+      : [...baseItems, perfilItem];
 
   return (
     <>
@@ -76,10 +102,9 @@ const SideBar = () => {
           isExpanded ? "w-64" : "lg:w-20 w-64"
         }`}
       >
-        {" "}
-        <div className={`p-6  ${!isExpanded && "lg:p-4"}`}>
+        <div className={`p-6 ${!isExpanded && "lg:p-4"}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10  rounded-lg flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
               <Image
                 src="/sst-icon.png"
                 alt="SST Logo"
@@ -95,7 +120,8 @@ const SideBar = () => {
             )}
           </div>
         </div>
-        {/* Botón expandir/contraer - solo en desktop */}
+
+        {/* Expandir/contraer - solo desktop */}
         <div className="hidden lg:flex px-6 py-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -112,18 +138,23 @@ const SideBar = () => {
             )}
           </button>
         </div>
+
         <nav className="flex-1 px-4 py-6">
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.href}>
+                  {/* Separador visual antes de sección admin */}
+                  {"isAdminSection" in item && item.isAdminSection && (
+                    <div
+                      className={`border-t border-blue-800 mb-2 mt-2 ${!isExpanded && !isMobile ? "mx-2" : "mx-0"}`}
+                    />
+                  )}
                   <Link
                     href={item.href}
                     onClick={() => {
-                      if (isMobile) {
-                        setIsOpen(false);
-                      }
+                      if (isMobile) setIsOpen(false);
                     }}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#1a4876] transition duration-200 group relative ${
                       !isExpanded && "lg:justify-center lg:px-2"
@@ -132,18 +163,21 @@ const SideBar = () => {
                   >
                     <div className="relative shrink-0">
                       <Icon size={20} />
-                      {item.badge && !isExpanded && !isMobile && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                          {item.badge}
-                        </span>
-                      )}
+                      {"badge" in item &&
+                        item.badge &&
+                        !isExpanded &&
+                        !isMobile && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            {item.badge}
+                          </span>
+                        )}
                     </div>
                     {(isExpanded || isMobile) && (
                       <>
                         <span className="font-medium text-sm flex-1">
                           {item.label}
                         </span>
-                        {item.badge && (
+                        {"badge" in item && item.badge && (
                           <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shrink-0">
                             {item.badge}
                           </span>
@@ -156,6 +190,7 @@ const SideBar = () => {
             })}
           </ul>
         </nav>
+
         <div className="p-4 border-t border-blue-800">
           <p className="text-xs text-blue-300 text-center">© 2026 SST App</p>
         </div>

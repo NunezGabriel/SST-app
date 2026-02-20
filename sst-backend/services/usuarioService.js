@@ -19,19 +19,11 @@ async function crearUsuarioConAsignaciones(data) {
 
     // Solo hacer asignaciones automáticas para workers
     if (nuevoUsuario.tipo === "WORKER") {
-      const charlas = await tx.charla.findMany();
+      // NOTA: No se crean ProgresoCharla automáticamente para evitar 365 registros por usuario
+      // Se crearán solo cuando el usuario interactúe con una charla desde el frontend
+      
       const documentos = await tx.documentoSeguridad.findMany();
       const logros = await tx.logro.findMany();
-
-      if (charlas.length > 0) {
-        await tx.progresoCharla.createMany({
-          data: charlas.map((charla) => ({
-            idUsuario: nuevoUsuario.id,
-            idCharla: charla.id,
-            estado: "PENDIENTE",
-          })),
-        });
-      }
 
       if (documentos.length > 0) {
         await tx.visualizacionDocumento.createMany({
@@ -107,4 +99,3 @@ module.exports = {
   activarUsuario,
   eliminarUsuario,
 };
-

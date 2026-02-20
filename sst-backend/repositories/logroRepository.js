@@ -13,7 +13,7 @@ function findById(id) {
 }
 
 function findByNombre(nombre) {
-  return prisma.logro.findUnique({
+  return prisma.logro.findFirst({
     where: { nombre },
   });
 }

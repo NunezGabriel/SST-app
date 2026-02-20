@@ -9,16 +9,40 @@ function listarCharlasAdmin() {
 }
 
 async function listarCharlasDeUsuario(usuarioId) {
-  const progresos = await progresoCharlaRepository.findByUsuario(usuarioId);
-  return progresos.map((p) => ({
-    id: p.charla.id,
-    nombre: p.charla.nombre,
-    enlace: p.charla.enlace,
-    etiqueta: p.charla.etiqueta,
-    fechaCharla: p.charla.fechaCharla,
-    estado: p.estado,
-    fechaCompletada: p.fechaCompletada,
-  }));
+  // Obtener todas las charlas con LEFT JOIN a ProgresoCharla
+  // Si no existe progreso, se muestra como PENDIENTE
+  const charlas = await prisma.charla.findMany({
+    orderBy: { fechaCharla: "asc" },
+  });
+
+  const progresos = await prisma.progresoCharla.findMany({
+    where: { idUsuario: usuarioId },
+    select: {
+      idCharla: true,
+      estado: true,
+      fechaCompletada: true,
+    },
+  });
+
+  // Crear un mapa de progresos por charlaId para acceso rápido
+  const progresoMap = new Map();
+  progresos.forEach((p) => {
+    progresoMap.set(p.idCharla, p);
+  });
+
+  // Combinar charlas con sus progresos (si existen)
+  return charlas.map((charla) => {
+    const progreso = progresoMap.get(charla.id);
+    return {
+      id: charla.id,
+      nombre: charla.nombre,
+      enlace: charla.enlace,
+      etiqueta: charla.etiqueta,
+      fechaCharla: charla.fechaCharla,
+      estado: progreso ? progreso.estado : "PENDIENTE",
+      fechaCompletada: progreso ? progreso.fechaCompletada : null,
+    };
+  });
 }
 
 async function crearCharla(data) {
@@ -32,19 +56,14 @@ async function crearCharla(data) {
       },
     });
 
+    // NOTA: No se crean ProgresoCharla automáticamente para evitar muchos registros
+    // Se crearán solo cuando el usuario interactúe con la charla desde el frontend
+    // Solo se envía notificación
     const workers = await tx.usuario.findMany({
       where: { tipo: "WORKER", activo: true },
     });
 
     if (workers.length > 0) {
-      await tx.progresoCharla.createMany({
-        data: workers.map((u) => ({
-          idUsuario: u.id,
-          idCharla: nuevaCharla.id,
-          estado: "PENDIENTE",
-        })),
-      });
-
       await notificacionService.crearNotificacionesParaUsuarios(
         workers.map((u) => ({
           idUsuario: u.id,
@@ -68,23 +87,40 @@ function eliminarCharla(id) {
 }
 
 async function marcarCharlaCompletada(usuarioId, charlaId) {
-  const progreso = await progresoCharlaRepository.findByUsuarioYCharla(
+  // Verificar si existe la charla
+  const charla = await charlaRepository.findById(charlaId);
+  if (!charla) {
+    throw new Error("Charla no encontrada");
+  }
+
+  // Buscar o crear el progreso
+  let progreso = await progresoCharlaRepository.findByUsuarioYCharla(
     usuarioId,
     charlaId
   );
 
+  // Si no existe progreso, crearlo
   if (!progreso) {
-    throw new Error("Charla no asignada al usuario");
-  }
+    progreso = await prisma.progresoCharla.create({
+      data: {
+        idUsuario: usuarioId,
+        idCharla: charlaId,
+        estado: "COMPLETADA",
+        fechaCompletada: new Date(),
+      },
+    });
+  } else {
+    // Si ya está completada, retornar sin cambios
+    if (progreso.estado === "COMPLETADA") {
+      return progreso;
+    }
 
-  if (progreso.estado === "COMPLETADA") {
-    return progreso;
+    // Actualizar a completada
+    progreso = await progresoCharlaRepository.update(progreso.id, {
+      estado: "COMPLETADA",
+      fechaCompletada: new Date(),
+    });
   }
-
-  const actualizado = await progresoCharlaRepository.update(progreso.id, {
-    estado: "COMPLETADA",
-    fechaCompletada: new Date(),
-  });
 
   // Logro: "Primera Charla"
   const completadas = await prisma.progresoCharla.count({
@@ -100,7 +136,7 @@ async function marcarCharlaCompletada(usuarioId, charlaId) {
     await logroService.desbloquearLogroPorNombre(usuarioId, "Experto en SST");
   }
 
-  return actualizado;
+  return progreso;
 }
 
 module.exports = {

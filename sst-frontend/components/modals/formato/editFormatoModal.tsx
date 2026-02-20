@@ -1,28 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import { X, Link, Tag, PlusCircle } from "lucide-react";
-import {
-  DocTipo,
-  DocumentoFormData,
-} from "@/components/modals/editDocumentoModal";
+import { useEffect, useState } from "react";
+import { X, Link, Tag, Save } from "lucide-react";
 
-interface CreateDocumentoModalProps {
-  open: boolean;
-  onClose: () => void;
-  onCreate: (data: DocumentoFormData) => void;
+export interface FormatoFormData {
+  nombre: string;
+  tipo: string;
+  enlace: string;
 }
 
-const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
+interface EditFormatoModalProps {
+  open: boolean;
+  formato: FormatoFormData | null;
+  onClose: () => void;
+  onSave: (data: FormatoFormData) => void;
+}
+
+const TIPOS_FORMATO = [
+  "Inspección",
+  "Incidentes",
+  "Riesgos",
+  "Capacitación",
+  "Equipos",
+  "Permisos",
+];
+
+const EditFormatoModal: React.FC<EditFormatoModalProps> = ({
   open,
+  formato,
   onClose,
-  onCreate,
+  onSave,
 }) => {
-  const [form, setForm] = useState<DocumentoFormData>({
+  const [form, setForm] = useState<FormatoFormData>({
     nombre: "",
-    tipo: "procedimiento",
+    tipo: "Inspección",
     enlace: "",
   });
+
+  useEffect(() => {
+    if (formato) setForm(formato);
+  }, [formato]);
 
   if (!open) return null;
 
@@ -34,47 +51,35 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(form);
-    setForm({ nombre: "", tipo: "procedimiento", enlace: "" });
-  };
-
-  const handleClose = () => {
-    setForm({ nombre: "", tipo: "procedimiento", enlace: "" });
-    onClose();
+    onSave(form);
   };
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-        onClick={handleClose}
+        onClick={onClose}
       />
-
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-          {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
             <div>
               <h2 className="text-lg font-bold text-gray-900">
-                Crear Documento
+                Editar Formato
               </h2>
               <p className="text-sm text-gray-400 mt-0.5">
-                Completa los datos del nuevo documento
+                Modifica los datos del formato
               </p>
             </div>
             <button
-              onClick={handleClose}
+              onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
-            {/* Nombre */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Nombre <span className="text-red-400">*</span>
@@ -85,12 +90,11 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
                 value={form.nombre}
                 onChange={handleChange}
                 required
-                placeholder="Ej: Procedimiento de Evacuación v2.1"
+                placeholder="Ej: Formato de Inspección de Área"
                 className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
               />
             </div>
 
-            {/* Tipo */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Tipo <span className="text-red-400">*</span>
@@ -107,14 +111,15 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
                   required
                   className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none"
                 >
-                  <option value="procedimiento">Procedimiento</option>
-                  <option value="instructivo">Instructivo</option>
-                  <option value="manual">Manual</option>
+                  {TIPOS_FORMATO.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Enlace */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Enlace de Drive <span className="text-red-400">*</span>
@@ -136,11 +141,10 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={onClose}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
               >
                 Cancelar
@@ -149,8 +153,8 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
                 type="submit"
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#003366] text-white hover:bg-[#004080] transition flex items-center justify-center gap-2"
               >
-                <PlusCircle size={15} />
-                Crear Documento
+                <Save size={15} />
+                Guardar Cambios
               </button>
             </div>
           </form>
@@ -160,4 +164,4 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
   );
 };
 
-export default CreateDocumentoModal;
+export default EditFormatoModal;

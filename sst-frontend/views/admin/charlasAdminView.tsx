@@ -5,7 +5,7 @@ import LayoutComponent from "@/components/layoutComponent";
 import KpiComponent from "@/components/kpiComponent";
 import EditCharlaModal, {
   CharlaFormData,
-} from "@/components/modals/editCharlaModal";
+} from "@/components/modals/charla/editCharlaModal";
 
 import {
   FileText,

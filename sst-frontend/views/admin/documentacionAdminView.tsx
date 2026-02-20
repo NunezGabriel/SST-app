@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import EditDocumentoModal from "@/components/modals/editDocumentoModal";
-import CreateDocumentoModal from "@/components/modals/createDocumentoModal";
-import { DocumentoFormData } from "@/components/modals/editDocumentoModal";
+import EditDocumentoModal from "@/components/modals/documento/editDocumentoModal";
+import CreateDocumentoModal from "@/components/modals/documento/createDocumentoModal";
+import { DocumentoFormData } from "@/components/modals/documento/editDocumentoModal";
 
 import {
   Search,

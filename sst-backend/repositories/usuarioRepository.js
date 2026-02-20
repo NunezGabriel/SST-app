@@ -38,6 +38,19 @@ function deactivate(id) {
   });
 }
 
+function activate(id) {
+  return prisma.usuario.update({
+    where: { id },
+    data: { activo: true },
+  });
+}
+
+function destroy(id) {
+  return prisma.usuario.delete({
+    where: { id },
+  });
+}
+
 module.exports = {
   findById,
   findByCorreo,
@@ -45,5 +58,7 @@ module.exports = {
   create,
   update,
   deactivate,
+  activate,
+  destroy,
 };
 

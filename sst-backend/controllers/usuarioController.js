@@ -77,11 +77,35 @@ async function desactivarUsuario(req, res) {
   }
 }
 
+async function activarUsuario(req, res) {
+  try {
+    const id = Number(req.params.id);
+    await usuarioService.activarUsuario(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error al activar usuario:", error);
+    res.status(500).json({ error: "Error al activar usuario" });
+  }
+}
+
+async function eliminarUsuario(req, res) {
+  try {
+    const id = Number(req.params.id);
+    await usuarioService.eliminarUsuario(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error al eliminar usuario:", error);
+    res.status(500).json({ error: "Error al eliminar usuario" });
+  }
+}
+
 module.exports = {
   crearUsuario,
   listarUsuarios,
   obtenerUsuario,
   actualizarUsuario,
   desactivarUsuario,
+  activarUsuario,
+  eliminarUsuario,
 };
 

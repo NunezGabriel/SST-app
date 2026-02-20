@@ -90,11 +90,21 @@ async function desactivarUsuario(id) {
   return usuarioRepository.deactivate(id);
 }
 
+async function activarUsuario(id) {
+  return usuarioRepository.activate(id);
+}
+
+async function eliminarUsuario(id) {
+  return usuarioRepository.destroy(id);
+}
+
 module.exports = {
   crearUsuarioConAsignaciones,
   listarUsuarios,
   obtenerUsuarioPorId,
   actualizarUsuario,
   desactivarUsuario,
+  activarUsuario,
+  eliminarUsuario,
 };
 

@@ -12,11 +12,24 @@ router.get("/", authMiddleware, adminOnly, usuarioController.listarUsuarios);
 router.get("/:id", authMiddleware, adminOnly, usuarioController.obtenerUsuario);
 router.post("/", authMiddleware, adminOnly, usuarioController.crearUsuario);
 router.put("/:id", authMiddleware, adminOnly, usuarioController.actualizarUsuario);
+router.patch(
+  "/:id/desactivar",
+  authMiddleware,
+  adminOnly,
+  usuarioController.desactivarUsuario
+);
+router.patch(
+  "/:id/activar",
+  authMiddleware,
+  adminOnly,
+  usuarioController.activarUsuario
+);
+
 router.delete(
   "/:id",
   authMiddleware,
   adminOnly,
-  usuarioController.desactivarUsuario
+  usuarioController.eliminarUsuario
 );
 
 module.exports = router;

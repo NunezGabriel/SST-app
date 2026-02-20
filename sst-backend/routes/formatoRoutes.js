@@ -17,4 +17,3 @@ router.put("/:id", authMiddleware, adminOnly, formatoController.actualizarFormat
 router.delete("/:id", authMiddleware, adminOnly, formatoController.eliminarFormato);
 
 module.exports = router;
-

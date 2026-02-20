@@ -3,7 +3,8 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "migrate": "node node_modules/prisma/build/index.js migrate dev",
-    "studio": "node node_modules/prisma/build/index.js studio"
+    "studio": "node node_modules/prisma/build/index.js studio",
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.0",

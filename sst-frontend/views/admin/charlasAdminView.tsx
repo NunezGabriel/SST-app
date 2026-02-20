@@ -3,123 +3,117 @@
 import { useState, useMemo } from "react";
 import LayoutComponent from "@/components/layoutComponent";
 import KpiComponent from "@/components/kpiComponent";
-import { PlayCircle, CheckCircle2, Clock, File, Search } from "lucide-react";
+import EditCharlaModal, {
+  CharlaFormData,
+} from "@/components/modals/editCharlaModal";
 
-type CharlaStatus = "no_iniciada" | "completada";
+import {
+  FileText,
+  CheckCircle2,
+  Clock,
+  File,
+  Search,
+  Pencil,
+  Users,
+} from "lucide-react";
 
 interface Charla {
   id: number;
-  titulo: string;
-  duracionMin: number;
-  estado: CharlaStatus;
-  fecha: string; // ISO: "2025-01-15"
+  nombre: string;
+  enlace: string;
+  fechaCharla: string; // "YYYY-MM-DD"
 }
 
 const charlasMock: Charla[] = [
   {
     id: 1,
-    titulo: "Uso Correcto de EPP en Altura",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-01-08",
+    nombre: "Uso Correcto de EPP en Altura",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-01-08",
   },
   {
     id: 2,
-    titulo: "Riesgos Eléctricos Básicos",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-01-22",
+    nombre: "Riesgos Eléctricos Básicos",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-01-22",
   },
   {
     id: 3,
-    titulo: "Ergonomía en el Trabajo",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-02-05",
+    nombre: "Ergonomía en el Trabajo",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-02-05",
   },
   {
     id: 4,
-    titulo: "Primeros Auxilios Básicos",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-02-19",
+    nombre: "Primeros Auxilios Básicos",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-02-19",
   },
   {
     id: 5,
-    titulo: "Manejo de Residuos Peligrosos",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-03-12",
+    nombre: "Manejo de Residuos Peligrosos",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-03-12",
   },
   {
     id: 6,
-    titulo: "Prevención de Incendios",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-03-26",
+    nombre: "Prevención de Incendios",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-03-26",
   },
   {
     id: 7,
-    titulo: "Señalización de Seguridad",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-04-09",
+    nombre: "Señalización de Seguridad",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-04-09",
   },
   {
     id: 8,
-    titulo: "Manejo de Cargas Pesadas",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-04-23",
+    nombre: "Manejo de Cargas Pesadas",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-04-23",
   },
   {
     id: 9,
-    titulo: "Equipos de Protección Auditiva",
-    duracionMin: 5,
-    estado: "completada",
-    fecha: "2025-05-07",
+    nombre: "Equipos de Protección Auditiva",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-05-07",
   },
   {
     id: 10,
-    titulo: "Control de Derrames Químicos",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-05-21",
+    nombre: "Control de Derrames Químicos",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-05-21",
   },
   {
     id: 11,
-    titulo: "Seguridad Vial en Planta",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-06-04",
+    nombre: "Seguridad Vial en Planta",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-06-04",
   },
   {
     id: 12,
-    titulo: "Riesgos Biológicos en el Trabajo",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-06-18",
+    nombre: "Riesgos Biológicos en el Trabajo",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-06-18",
   },
   {
     id: 13,
-    titulo: "Trabajos en Espacios Confinados",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-07-02",
+    nombre: "Trabajos en Espacios Confinados",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-07-02",
   },
   {
     id: 14,
-    titulo: "Estrés Laboral y Bienestar",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-07-16",
+    nombre: "Estrés Laboral y Bienestar",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-07-16",
   },
   {
     id: 15,
-    titulo: "Uso de Extintores",
-    duracionMin: 5,
-    estado: "no_iniciada",
-    fecha: "2025-08-06",
+    nombre: "Uso de Extintores",
+    enlace: "https://drive.google.com",
+    fechaCharla: "2025-08-06",
   },
 ];
 
@@ -138,59 +132,65 @@ const MESES = [
   "Diciembre",
 ];
 
-const CharlasView = () => {
+const CharlasAdminView = () => {
   const [charlas, setCharlas] = useState<Charla[]>(charlasMock);
   const [mesActivo, setMesActivo] = useState<number | null>(null);
   const [busqueda, setBusqueda] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [charlaEditando, setCharlaEditando] = useState<Charla | null>(null);
 
-  // Meses que tienen charlas
   const mesesConCharlas = useMemo(() => {
     const set = new Set<number>();
-    charlas.forEach((c) => set.add(new Date(c.fecha).getMonth()));
+    charlas.forEach((c) => set.add(new Date(c.fechaCharla).getMonth()));
     return set;
   }, [charlas]);
 
   const charlasFiltradas = useMemo(() => {
     return charlas.filter((c) => {
       const coincideMes =
-        mesActivo === null || new Date(c.fecha).getMonth() === mesActivo;
-      const coincideBusqueda = c.titulo
+        mesActivo === null || new Date(c.fechaCharla).getMonth() === mesActivo;
+      const coincideBusqueda = c.nombre
         .toLowerCase()
         .includes(busqueda.toLowerCase());
       return coincideMes && coincideBusqueda;
     });
   }, [charlas, mesActivo, busqueda]);
 
-  const totalCharlas = charlas.length;
-  const completadas = charlas.filter((c) => c.estado === "completada").length;
-  const progresoGlobal = Math.round((completadas / totalCharlas) * 100);
+  const handleEditarClick = (charla: Charla) => {
+    setCharlaEditando(charla);
+    setModalOpen(true);
+  };
 
-  const handleOpenCharla = (charla: Charla) => {
-    window.open("https://drive.google.com", "_blank");
-    if (charla.estado !== "completada") {
-      setCharlas((prev) =>
-        prev.map((c) =>
-          c.id === charla.id ? { ...c, estado: "completada" } : c,
-        ),
-      );
-    }
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setCharlaEditando(null);
+  };
+
+  const handleSave = (data: CharlaFormData) => {
+    if (!charlaEditando) return;
+    setCharlas((prev) =>
+      prev.map((c) => (c.id === charlaEditando.id ? { ...c, ...data } : c)),
+    );
+    handleCloseModal();
   };
 
   return (
     <LayoutComponent>
       <div className="max-w-5xl mx-auto py-8 space-y-8">
         {/* ── Header ── */}
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#003366] flex items-center justify-center shadow-lg">
-            <File className="w-7 h-7 text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-[#022B54]">
-              Charlas de 5 Minutos
-            </h1>
-            <p className="text-gray-500 text-base mt-1">
-              Capacitaciones anuales de seguridad laboral
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#003366] flex items-center justify-center shadow-lg">
+              <File className="w-7 h-7 text-cyan-400" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-[#022B54]">
+                Charlas de Seguridad
+              </h1>
+              <p className="text-gray-500 text-base mt-1">
+                Gestión de capacitaciones anuales
+              </p>
+            </div>
           </div>
         </div>
 
@@ -198,34 +198,37 @@ const CharlasView = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <KpiComponent
             title="Total Charlas"
-            value={totalCharlas}
+            value={charlas.length}
             showProgressBar={false}
             showIcon
             icon={File}
             iconColor="text-cyan-500"
           />
           <KpiComponent
-            title="Completadas"
-            value={completadas}
+            title="Este Mes"
+            value={
+              charlas.filter(
+                (c) =>
+                  new Date(c.fechaCharla).getMonth() === new Date().getMonth(),
+              ).length
+            }
             showProgressBar={false}
-            showIcon
-            icon={CheckCircle2}
-            iconColor="text-emerald-500"
-          />
-          <KpiComponent
-            title="Progreso Anual"
-            value={`${progresoGlobal}%`}
-            percentage={progresoGlobal}
-            showProgressBar
             showIcon
             icon={Clock}
             iconColor="text-blue-500"
+          />
+          <KpiComponent
+            title="Workers Asignados"
+            value="42"
+            showProgressBar={false}
+            showIcon
+            icon={Users}
+            iconColor="text-emerald-500"
           />
         </div>
 
         {/* ── Filtros ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-5">
-          {/* Búsqueda */}
           <div className="relative">
             <Search
               size={15}
@@ -240,7 +243,6 @@ const CharlasView = () => {
             />
           </div>
 
-          {/* Meses */}
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
               Mes
@@ -291,9 +293,9 @@ const CharlasView = () => {
             </div>
           ) : (
             charlasFiltradas.map((charla) => {
-              const isCompletada = charla.estado === "completada";
-              const fechaObj = new Date(charla.fecha);
-              const fechaLabel = fechaObj.toLocaleDateString("es-PE", {
+              const fechaLabel = new Date(
+                charla.fechaCharla,
+              ).toLocaleDateString("es-PE", {
                 day: "2-digit",
                 month: "long",
               });
@@ -304,51 +306,33 @@ const CharlasView = () => {
                   className="group bg-white rounded-2xl shadow-sm border-2 border-gray-100 hover:border-cyan-300 px-6 py-5 flex items-center justify-between gap-6 transition-all hover:shadow-md"
                 >
                   {/* Icono */}
-                  <div
-                    className={`w-13 h-13 w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform shrink-0 ${
-                      isCompletada
-                        ? "bg-emerald-100 text-emerald-600"
-                        : "bg-cyan-100 text-cyan-600"
-                    }`}
-                  >
-                    {isCompletada ? (
-                      <CheckCircle2 className="w-7 h-7" />
-                    ) : (
-                      <PlayCircle className="w-7 h-7" />
-                    )}
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm shrink-0 bg-blue-100 text-[#003366] group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6" />
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h2 className="text-base font-bold text-gray-900 truncate">
-                        {charla.titulo}
-                      </h2>
-                      {isCompletada && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-                          ✓ Completada
-                        </span>
-                      )}
-                    </div>
                     <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {charla.duracionMin}{" "}
-                        min
-                      </span>
                       <span>📅 {fechaLabel}</span>
+                      <a
+                        href={charla.enlace}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:underline truncate max-w-[200px]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Ver en Drive →
+                      </a>
                     </div>
                   </div>
 
-                  {/* Botón */}
+                  {/* Botón editar */}
                   <button
-                    onClick={() => handleOpenCharla(charla)}
-                    className={`px-6 py-2.5 rounded-full font-bold text-sm text-white shadow transition-all hover:scale-105 whitespace-nowrap ${
-                      isCompletada
-                        ? "bg-emerald-500 hover:bg-emerald-600"
-                        : "bg-cyan-500 hover:bg-cyan-600"
-                    }`}
+                    onClick={() => handleEditarClick(charla)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm bg-[#003366] text-white hover:bg-[#004080] shadow transition-all hover:scale-105 whitespace-nowrap"
                   >
-                    {isCompletada ? "Revisar" : "Comenzar"}
+                    <Pencil size={14} />
+                    Editar
                   </button>
                 </div>
               );
@@ -359,12 +343,27 @@ const CharlasView = () => {
         {/* Footer count */}
         {charlasFiltradas.length > 0 && (
           <p className="text-center text-xs text-gray-400">
-            Mostrando {charlasFiltradas.length} de {totalCharlas} charlas
+            Mostrando {charlasFiltradas.length} de {charlas.length} charlas
           </p>
         )}
       </div>
+
+      {/* ── Modal ── */}
+      <EditCharlaModal
+        open={modalOpen}
+        charla={
+          charlaEditando
+            ? {
+                nombre: charlaEditando.nombre,
+                enlace: charlaEditando.enlace,
+              }
+            : null
+        }
+        onClose={handleCloseModal}
+        onSave={handleSave}
+      />
     </LayoutComponent>
   );
 };
 
-export default CharlasView;
+export default CharlasAdminView;

@@ -2,9 +2,9 @@
 
 import React, { JSX } from "react";
 import { useRouter } from "next/navigation";
-import ProfileCard from "@/components/ProfileCard";
-import StatsCard from "@/components/StatsCard";
+import ProfileCard from "@/components/cards/ProfileCard";
 import LayoutComponent from "@/components/layoutComponent";
+import KpiComponent from "@/components/kpiComponent";
 
 export default function ProfileView(): JSX.Element {
   const router = useRouter();
@@ -25,8 +25,8 @@ export default function ProfileView(): JSX.Element {
   return (
     <LayoutComponent>
       <main className="min-h-screen flex items-center justify-center p-6">
-        <div className="relative max-w-5xl w-full rounded-3xl shadow-2xl overflow-hidden ">
-          {/* Header gradient */}
+        <div className="relative max-w-5xl w-full rounded-3xl shadow-2xl overflow-hidden">
+          {/* HEADER */}
           <div className="relative bg-gradient-to from-[#003366] via-[#4b2c82] to-[#0066a3] p-12 text-white overflow-hidden">
             {/* Glows */}
             <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]"></div>
@@ -39,30 +39,39 @@ export default function ProfileView(): JSX.Element {
                 email="juan.dev@empresa.com"
               />
             </div>
-
-            <div className="p-10">
-              {/* Stats */}
+            {/* CONTENIDO */}
+            <div className=" p-10">
+              {/* KPIs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <StatsCard
-                  soft
-                  label="Charlas Completadas"
-                  value={<span>24/30</span>}
-                  progress={80}
+                <KpiComponent
+                  title="Charlas Completadas"
+                  value="24 / 30"
+                  percentage={80}
+                  showIcon
+                  iconPosition="top-right"
+                  progressBarColor="bg-gradient-to-r from-[#003366] to-[#4b2c82]"
                 />
-                <StatsCard
-                  soft
-                  label="Cumplimiento"
-                  value={<span>85%</span>}
-                  progress={85}
+
+                <KpiComponent
+                  title="Cumplimiento"
+                  value="85%"
+                  percentage={85}
+                  showIcon
+                  iconPosition="top-right"
+                  progressBarColor="bg-gradient-to-r from-[#003366] to-[#4b2c82]"
                 />
-                <StatsCard
-                  soft
-                  label="Alertas Pendientes"
-                  value={<span>3</span>}
+
+                <KpiComponent
+                  title="Alertas Pendientes"
+                  value="3"
+                  showProgressBar={false}
+                  showIcon
+                  iconPosition="top-right"
+                  variant="alert"
                 />
               </div>
 
-              {/* Botón sólido */}
+              {/* Logout */}
               <div className="mt-12 flex justify-center">
                 <button
                   onClick={handleLogout}
@@ -73,8 +82,6 @@ export default function ProfileView(): JSX.Element {
               </div>
             </div>
           </div>
-
-          {/* Contenido sin background extra */}
         </div>
       </main>
     </LayoutComponent>

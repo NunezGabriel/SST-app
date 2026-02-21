@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import LayoutComponent from "@/components/layoutComponent";
 import EditFormatoModal, {
   FormatoFormData,
@@ -19,16 +19,12 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import {
+  useFormatoAdminContext,
+  Formato,
+} from "@/context/FormatoAdminContext";
 
-interface Formato {
-  id: number;
-  nombre: string;
-  tipo: string;
-  enlace: string;
-  icono: any;
-}
-
-const iconoPorTipo = (tipo: string) => {
+const iconoPorTipo = (tipo: string | null) => {
   switch (tipo) {
     case "Inspección":
       return FileCheck;
@@ -47,153 +43,81 @@ const iconoPorTipo = (tipo: string) => {
   }
 };
 
-const formatosMock: Formato[] = [
-  {
-    id: 1,
-    nombre: "Formato de Inspección",
-    tipo: "Inspección",
-    enlace: "https://drive.google.com",
-    icono: FileCheck,
-  },
-  {
-    id: 2,
-    nombre: "Formato de Reporte de Incidente",
-    tipo: "Incidentes",
-    enlace: "https://drive.google.com",
-    icono: FileX,
-  },
-  {
-    id: 3,
-    nombre: "Formato de Evaluación de Riesgos",
-    tipo: "Riesgos",
-    enlace: "https://drive.google.com",
-    icono: FileBarChart,
-  },
-  {
-    id: 4,
-    nombre: "Formato de Capacitación",
-    tipo: "Capacitación",
-    enlace: "https://drive.google.com",
-    icono: FileText,
-  },
-  {
-    id: 5,
-    nombre: "Formato de Checklist",
-    tipo: "Inspección",
-    enlace: "https://drive.google.com",
-    icono: FileCheck,
-  },
-  {
-    id: 6,
-    nombre: "Formato de Registro de EPP",
-    tipo: "Equipos",
-    enlace: "https://drive.google.com",
-    icono: FileSpreadsheet,
-  },
-  {
-    id: 7,
-    nombre: "Formato de Permiso de Trabajo",
-    tipo: "Permisos",
-    enlace: "https://drive.google.com",
-    icono: FileType,
-  },
-  {
-    id: 8,
-    nombre: "Formato de Inspección de Maquinaria",
-    tipo: "Inspección",
-    enlace: "https://drive.google.com",
-    icono: FileCheck,
-  },
-  {
-    id: 9,
-    nombre: "Formato de Análisis de Seguridad",
-    tipo: "Riesgos",
-    enlace: "https://drive.google.com",
-    icono: FileBarChart,
-  },
-  {
-    id: 10,
-    nombre: "Formato de Registro de Capacitación",
-    tipo: "Capacitación",
-    enlace: "https://drive.google.com",
-    icono: FileText,
-  },
-  {
-    id: 11,
-    nombre: "Formato de Reporte de Accidente",
-    tipo: "Incidentes",
-    enlace: "https://drive.google.com",
-    icono: FileX,
-  },
-  {
-    id: 12,
-    nombre: "Formato de Inspección de Área",
-    tipo: "Inspección",
-    enlace: "https://drive.google.com",
-    icono: FileCheck,
-  },
-];
-
 const FormatoAdminView = () => {
-  const [formatos, setFormatos] = useState<Formato[]>(formatosMock);
+  const {
+    formatos,
+    isLoading,
+    error,
+    createFormato,
+    updateFormato,
+    deleteFormato,
+  } = useFormatoAdminContext();
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [formatoEditando, setFormatoEditando] = useState<Formato | null>(null);
 
-  const categorias = [
-    "Todos",
-    ...Array.from(new Set(formatos.map((f) => f.tipo))),
-  ];
+  const categorias = useMemo(() => {
+    const tipos = formatos
+      .map((f) => f.tipo)
+      .filter((t): t is string => t !== null && t !== undefined);
+    return ["Todos", ...Array.from(new Set(tipos))];
+  }, [formatos]);
 
-  const formatosFiltrados = formatos.filter((f) => {
-    const coincideBusqueda = f.nombre
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
-    const coincideCategoria =
-      categoriaFiltro === "Todos" || f.tipo === categoriaFiltro;
-    return coincideBusqueda && coincideCategoria;
-  });
+  const formatosFiltrados = useMemo(() => {
+    return formatos.filter((f) => {
+      const coincideBusqueda = f.nombre
+        .toLowerCase()
+        .includes(busqueda.toLowerCase());
+      const coincideCategoria =
+        categoriaFiltro === "Todos" ||
+        f.tipo === categoriaFiltro ||
+        (!f.tipo && categoriaFiltro === "Todos");
+      return coincideBusqueda && coincideCategoria;
+    });
+  }, [formatos, busqueda, categoriaFiltro]);
 
   const handleEditarClick = (formato: Formato) => {
     setFormatoEditando(formato);
     setEditModalOpen(true);
   };
 
-  const handleEliminar = (id: number) => {
-    setFormatos((prev) => prev.filter((f) => f.id !== id));
+  const handleEliminar = async (id: number) => {
+    if (
+      !window.confirm(
+        "¿Estás seguro de que deseas eliminar este formato? Esta acción no se puede deshacer."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteFormato(id);
+    } catch (err: any) {
+      alert(err.message || "Error al eliminar formato");
+    }
   };
 
-  const handleSaveEdit = (data: FormatoFormData) => {
+  const handleSaveEdit = async (data: FormatoFormData) => {
     if (!formatoEditando) return;
-    setFormatos((prev) =>
-      prev.map((f) =>
-        f.id === formatoEditando.id
-          ? {
-              ...f,
-              nombre: data.nombre,
-              tipo: data.tipo,
-              enlace: data.enlace,
-              icono: iconoPorTipo(data.tipo),
-            }
-          : f,
-      ),
-    );
-    setEditModalOpen(false);
-    setFormatoEditando(null);
+
+    try {
+      await updateFormato(formatoEditando.id, data);
+      setEditModalOpen(false);
+      setFormatoEditando(null);
+    } catch (err: any) {
+      alert(err.message || "Error al actualizar formato");
+    }
   };
 
-  const handleCreate = (data: FormatoFormData) => {
-    const nuevo: Formato = {
-      id: Date.now(),
-      nombre: data.nombre,
-      tipo: data.tipo,
-      enlace: data.enlace,
-      icono: iconoPorTipo(data.tipo),
-    };
-    setFormatos((prev) => [nuevo, ...prev]);
-    setCreateModalOpen(false);
+  const handleCreate = async (data: FormatoFormData) => {
+    try {
+      await createFormato(data);
+      setCreateModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Error al crear formato");
+    }
   };
 
   return (
@@ -247,64 +171,88 @@ const FormatoAdminView = () => {
             </div>
           </div>
 
-          {/* Grid de Formatos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {formatosFiltrados.map((formato) => {
-              const IconComponent = formato.icono;
-              return (
-                <div
-                  key={formato.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-cyan-300 transition-all duration-200 flex flex-col"
-                >
-                  {/* Contenido */}
-                  <div className="p-6 flex flex-col items-center justify-center gap-4 flex-1 min-h-[160px]">
-                    <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center">
-                      <IconComponent className="w-8 h-8 text-cyan-600" />
-                    </div>
-                    <div className="text-center">
-                      <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
-                        {formato.nombre}
-                      </h3>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
-                        {formato.tipo}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Botones editar / eliminar */}
-                  <div className="flex border-t border-gray-100">
-                    <button
-                      onClick={() => handleEditarClick(formato)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#003366] hover:bg-blue-50 transition"
-                    >
-                      <Pencil size={14} />
-                      Editar
-                    </button>
-                    <div className="w-px bg-gray-100" />
-                    <button
-                      onClick={() => handleEliminar(formato.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-red-500 hover:bg-red-50 transition"
-                    >
-                      <Trash2 size={14} />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Empty state */}
-          {formatosFiltrados.length === 0 && (
+          {/* Loading state */}
+          {isLoading && (
             <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-pulse" />
               <p className="text-gray-500 text-lg font-medium">
-                No se encontraron formatos
-              </p>
-              <p className="text-gray-400 text-sm mt-2">
-                Intenta con otros términos de búsqueda o cambia el filtro
+                Cargando formatos...
               </p>
             </div>
+          )}
+
+          {/* Error state */}
+          {error && !isLoading && (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-red-300 mx-auto mb-4" />
+              <p className="text-red-500 text-lg font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Grid de Formatos */}
+          {!isLoading && !error && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {formatosFiltrados.map((formato) => {
+                  const IconComponent = iconoPorTipo(formato.tipo);
+                  return (
+                    <div
+                      key={formato.id}
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-cyan-300 transition-all duration-200 flex flex-col"
+                    >
+                      {/* Contenido */}
+                      <div className="p-6 flex flex-col items-center justify-center gap-4 flex-1 min-h-[160px]">
+                        <div className="w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center">
+                          <IconComponent className="w-8 h-8 text-cyan-600" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
+                            {formato.nombre}
+                          </h3>
+                          {formato.tipo && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+                              {formato.tipo}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Botones editar / eliminar */}
+                      <div className="flex border-t border-gray-100">
+                        <button
+                          onClick={() => handleEditarClick(formato)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#003366] hover:bg-blue-50 transition"
+                        >
+                          <Pencil size={14} />
+                          Editar
+                        </button>
+                        <div className="w-px bg-gray-100" />
+                        <button
+                          onClick={() => handleEliminar(formato.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-red-500 hover:bg-red-50 transition"
+                        >
+                          <Trash2 size={14} />
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Empty state */}
+              {formatosFiltrados.length === 0 && (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg font-medium">
+                    No se encontraron formatos
+                  </p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Intenta con otros términos de búsqueda o cambia el filtro
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -316,7 +264,7 @@ const FormatoAdminView = () => {
           formatoEditando
             ? {
                 nombre: formatoEditando.nombre,
-                tipo: formatoEditando.tipo,
+                tipo: formatoEditando.tipo || "Inspección",
                 enlace: formatoEditando.enlace,
               }
             : null

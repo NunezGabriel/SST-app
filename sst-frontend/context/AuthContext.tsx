@@ -7,7 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { loginRequest, changePasswordRequest } from "@/lib/api/auth";
+import { loginRequest, changePasswordRequest, logoutRequest } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -83,8 +83,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Llamar al backend para logout (aunque con JWT stateless es principalmente simbólico)
+    if (user?.token) {
+      try {
+        await logoutRequest(user.token);
+      } catch (error) {
+        console.error("Error al cerrar sesión en el servidor:", error);
+      }
+    }
+    // Limpiar datos del cliente
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     router.push("/");
   };

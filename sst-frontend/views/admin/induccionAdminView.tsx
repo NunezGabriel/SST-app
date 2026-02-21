@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LayoutComponent from "@/components/layoutComponent";
 import {
   Shield,
@@ -11,8 +11,10 @@ import {
   Save,
   CheckCircle2,
   Wrench,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useInduccionAdminContext } from "@/context/InduccionAdminContext";
 
 // ── Convierte cualquier URL de YouTube al formato embed ──────────────────────
 const toEmbedUrl = (url: string): string | null => {
@@ -38,20 +40,49 @@ const toEmbedUrl = (url: string): string | null => {
   }
 };
 
-// ── Estado inicial (mock — luego vendrá del backend) ─────────────────────────
-const initialData = {
-  youtubeUrl: "https://www.youtube.com/watch?v=ngGX3Q_OBtM",
-  enlacePdf: "https://drive.google.com",
-  enlaceDiapositivas: "https://drive.google.com",
-};
-
 const InduccionAdminView = () => {
   const router = useRouter();
-  const [form, setForm] = useState(initialData);
+  const { induccion, isLoading, error, updateInduccion } = useInduccionAdminContext();
+  const [form, setForm] = useState({
+    youtubeUrl: "",
+    enlacePdf: "",
+    enlaceDiapositivas: "",
+    duracion: 10,
+  });
   const [saved, setSaved] = useState(false);
   const [urlError, setUrlError] = useState("");
 
+  // Cargar datos del contexto cuando estén disponibles
+  useEffect(() => {
+    if (induccion) {
+      setForm({
+        youtubeUrl: induccion.linkVideo,
+        enlacePdf: induccion.linkPdf,
+        enlaceDiapositivas: induccion.linkDiapo,
+        duracion: induccion.duracion,
+      });
+    }
+  }, [induccion]);
+
   const embedUrl = toEmbedUrl(form.youtubeUrl);
+
+  if (isLoading) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12">Cargando material de inducción...</div>
+      </LayoutComponent>
+    );
+  }
+
+  if (error && !induccion) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12 text-red-500">
+          {error || "Error al cargar material de inducción"}
+        </div>
+      </LayoutComponent>
+    );
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -60,14 +91,24 @@ const InduccionAdminView = () => {
     if (name === "youtubeUrl") setUrlError("");
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!embedUrl) {
       setUrlError("El enlace no es una URL de YouTube válida.");
       return;
     }
-    // TODO: llamar al endpoint de actualización
-    setSaved(true);
+    try {
+      await updateInduccion({
+        linkVideo: form.youtubeUrl,
+        linkPdf: form.enlacePdf,
+        linkDiapo: form.enlaceDiapositivas,
+        duracion: form.duracion,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      setUrlError(err.message || "Error al guardar cambios");
+    }
   };
 
   return (
@@ -194,6 +235,34 @@ const InduccionAdminView = () => {
                 onChange={handleChange}
                 required
                 placeholder="https://drive.google.com/..."
+                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
+              />
+            </div>
+          </div>
+
+          {/* Duración */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Duración (minutos) <span className="text-red-400">*</span>
+            </label>
+            <div className="relative">
+              <Clock
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="number"
+                name="duracion"
+                value={form.duracion}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    duracion: parseInt(e.target.value) || 0,
+                  }))
+                }
+                required
+                min="1"
+                placeholder="10"
                 className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
               />
             </div>

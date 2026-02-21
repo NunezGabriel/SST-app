@@ -50,8 +50,24 @@ export const loginRequest = async (
   }
 };
 
+export interface UsuarioCompleto {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  correo: string;
+  tipo: "ADMIN" | "WORKER";
+  activo: boolean;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+}
+
+export interface MeResponse {
+  user: UsuarioCompleto;
+}
+
 // ✅ Obtener información del usuario autenticado
-export const getMeRequest = async (token: string) => {
+export const getMeRequest = async (token: string): Promise<MeResponse> => {
   try {
     const response = await axios.get(`${API_URL}/api/auth/me`, {
       headers: {
@@ -95,5 +111,23 @@ export const changePasswordRequest = async (
       throw new Error(message || "Error al cambiar la contraseña.");
     }
     throw new Error("Error al cambiar la contraseña.");
+  }
+};
+
+// ✅ Logout
+export const logoutRequest = async (token: string): Promise<void> => {
+  try {
+    await axios.post(
+      `${API_URL}/api/auth/logout`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch (error: any) {
+    // Incluso si falla el request, el logout del cliente debe continuar
+    console.error("Error al cerrar sesión en el servidor:", error);
   }
 };

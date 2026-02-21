@@ -3,9 +3,55 @@
 import LayoutComponent from "@/components/layoutComponent";
 import { CheckCircle2, PlayCircle, Clock, FileText, Download, ExternalLink, Presentation, Shield, Award, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useInduccionAdminContext } from "@/context/InduccionAdminContext";
+
+// ── Convierte cualquier URL de YouTube al formato embed ──────────────────────
+const toEmbedUrl = (url: string): string | null => {
+  try {
+    const u = new URL(url);
+    let videoId: string | null = null;
+
+    if (u.hostname === "youtu.be") {
+      videoId = u.pathname.slice(1);
+    } else if (u.hostname.includes("youtube.com")) {
+      if (u.pathname === "/watch") {
+        videoId = u.searchParams.get("v");
+      } else if (u.pathname.startsWith("/embed/")) {
+        return url; // ya es embed
+      } else if (u.pathname.startsWith("/shorts/")) {
+        videoId = u.pathname.split("/shorts/")[1];
+      }
+    }
+
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  } catch {
+    return null;
+  }
+};
 
 const InduccionView = () => {
   const router = useRouter();
+  const { induccion, isLoading, error } = useInduccionAdminContext();
+
+  if (isLoading) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12">Cargando material de inducción...</div>
+      </LayoutComponent>
+    );
+  }
+
+  if (error || !induccion) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12 text-red-500">
+          {error || "Error al cargar material de inducción"}
+        </div>
+      </LayoutComponent>
+    );
+  }
+
+  const embedUrl = toEmbedUrl(induccion.linkVideo);
 
   return (
     <LayoutComponent>
@@ -33,7 +79,7 @@ const InduccionView = () => {
               </span>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
                 <Clock className="w-4 h-4" />
-                10 minutos
+                {induccion.duracion} minutos
               </span>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 text-purple-700 text-sm font-medium">
                 <BookOpen className="w-4 h-4" />
@@ -70,17 +116,19 @@ const InduccionView = () => {
                 </div>
               </div>
               {/* Video embebido con mejor estilo */}
-              <div className="w-full max-w-3xl mx-auto mt-6">
-                <div className="relative w-full rounded-xl overflow-hidden shadow-2xl" style={{ paddingBottom: "56.25%" }}>
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full"
-                    src="https://www.youtube.com/embed/ngGX3Q_OBtM?si=fmyhSWXAMBe2VdpP"
-                    title="Video de Inducción"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+              {embedUrl && (
+                <div className="w-full max-w-3xl mx-auto mt-6">
+                  <div className="relative w-full rounded-xl overflow-hidden shadow-2xl" style={{ paddingBottom: "56.25%" }}>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full"
+                      src={embedUrl}
+                      title="Video de Inducción"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -97,7 +145,7 @@ const InduccionView = () => {
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 text-sm text-gray-600">
                 <Clock className="w-4 h-4 text-cyan-600" />
-                <span className="font-medium">10 min</span>
+                <span className="font-medium">{induccion.duracion} min</span>
               </div>
             </div>
             <div>
@@ -133,7 +181,7 @@ const InduccionView = () => {
           {/* Botones para diapositivas y PDF mejorados */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <button
-              onClick={() => window.open("https://drive.google.com", "_blank")}
+              onClick={() => window.open(induccion.linkDiapo, "_blank")}
               className="group flex items-center gap-4 bg-white hover:bg-gradient-to hover:from-cyan-50 hover:to-blue-50 rounded-2xl border-2 border-gray-200 hover:border-cyan-300 px-6 py-5 transition-all shadow-md hover:shadow-xl"
             >
               <div className="w-12 h-12 rounded-xl bg-gradient-to from-cyan-100 to-blue-100 group-hover:from-cyan-200 group-hover:to-blue-200 flex items-center justify-center transition-all">
@@ -147,7 +195,7 @@ const InduccionView = () => {
             </button>
 
             <button
-              onClick={() => window.open("https://drive.google.com", "_blank")}
+              onClick={() => window.open(induccion.linkPdf, "_blank")}
               className="group flex items-center gap-4 bg-white hover:bg-gradient-to hover:from-cyan-50 hover:to-blue-50 rounded-2xl border-2 border-gray-200 hover:border-cyan-300 px-6 py-5 transition-all shadow-md hover:shadow-xl"
             >
               <div className="w-12 h-12 rounded-xl bg-gradient-to from-cyan-100 to-blue-100 group-hover:from-cyan-200 group-hover:to-blue-200 flex items-center justify-center transition-all">

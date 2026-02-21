@@ -6,6 +6,7 @@ import { FormatoAdminProvider } from "@/context/FormatoAdminContext";
 import { DocumentoAdminProvider } from "@/context/DocumentoAdminContext";
 import { CharlaAdminProvider } from "@/context/CharlaAdminContext";
 import { InduccionAdminProvider } from "@/context/InduccionAdminContext";
+import { ExamenAdminProvider } from "@/context/ExamenAdminContext";
 
 export default function ClientProvider({
   children,
@@ -18,7 +19,9 @@ export default function ClientProvider({
         <FormatoAdminProvider>
           <DocumentoAdminProvider>
             <CharlaAdminProvider>
-              <InduccionAdminProvider>{children}</InduccionAdminProvider>
+              <InduccionAdminProvider>
+                <ExamenAdminProvider>{children}</ExamenAdminProvider>
+              </InduccionAdminProvider>
             </CharlaAdminProvider>
           </DocumentoAdminProvider>
         </FormatoAdminProvider>

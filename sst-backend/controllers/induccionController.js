@@ -3,8 +3,16 @@ const induccionService = require("../services/induccionService");
 async function obtenerInduccion(req, res) {
   try {
     const induccion = await induccionService.obtenerInduccion();
+    // Si no hay registros, devolver valores por defecto en lugar de 404
     if (!induccion) {
-      return res.status(404).json({ error: "Material de inducción no encontrado" });
+      return res.json({
+        id: 0,
+        linkDiapo: "",
+        linkPdf: "",
+        linkVideo: "",
+        duracion: 10,
+        fechaActualizacion: new Date().toISOString(),
+      });
     }
     res.json(induccion);
   } catch (error) {

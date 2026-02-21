@@ -1,0 +1,99 @@
+import axios from "axios";
+
+const API_URL = "http://localhost:8080";
+
+export interface LoginResponse {
+  token: string;
+  usuario: {
+    id: number;
+    tipo: string;
+    nombre: string;
+    apellido: string;
+  };
+}
+
+// ✅ Login
+export const loginRequest = async (
+  correo: string,
+  contrasena: string
+): Promise<LoginResponse> => {
+  try {
+    const response = await axios.post(`${API_URL}/api/auth/login`, {
+      correo,
+      contrasena,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const status = error.response.status;
+      const message =
+        error.response.data?.message || error.response.data?.error;
+
+      if (status === 401) {
+        throw new Error(
+          "Credenciales incorrectas. Verifica tu correo y contraseña."
+        );
+      } else if (status === 404) {
+        throw new Error("Usuario no encontrado.");
+      } else if (message) {
+        throw new Error(message);
+      } else {
+        throw new Error("Error al iniciar sesión. Intenta de nuevo.");
+      }
+    } else if (error.request) {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica tu conexión."
+      );
+    } else {
+      throw new Error("Error inesperado. Intenta de nuevo.");
+    }
+  }
+};
+
+// ✅ Obtener información del usuario autenticado
+export const getMeRequest = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 401) {
+        throw new Error("Token inválido o expirado.");
+      }
+    }
+    throw new Error("Error al obtener información del usuario.");
+  }
+};
+
+// ✅ Cambiar contraseña (si existe el endpoint)
+export const changePasswordRequest = async (
+  token: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
+  try {
+    await axios.put(
+      `${API_URL}/api/auth/change-password`,
+      {
+        currentPassword,
+        newPassword,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch (error: any) {
+    if (error.response) {
+      const message = error.response.data?.message || error.response.data?.error;
+      throw new Error(message || "Error al cambiar la contraseña.");
+    }
+    throw new Error("Error al cambiar la contraseña.");
+  }
+};

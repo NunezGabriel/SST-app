@@ -1,13 +1,25 @@
+"use client";
+
 import FormatosView from "@/views/formatosView";
 import FormatoAdminView from "@/views/admin/formatoAdminView";
+import { useAuthContext } from "@/context/AuthContext";
 
-type UserRole = "WORKER" | "ADMIN";
+export default function FormatosPage() {
+  const { user, isLoading } = useAuthContext();
 
-// TODO: reemplazar con auth real (ej: getServerSession, useAuth, context, etc.)
-let MOCK_USER_ROLE: UserRole = "ADMIN";
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-lg">Cargando...</div>
+      </div>
+    );
+  }
 
-export default function CharlasPage() {
-  if (MOCK_USER_ROLE === "ADMIN") {
+  if (!user) {
+    return null;
+  }
+
+  if (user.rol === "ADMIN") {
     return <FormatoAdminView />;
   }
 

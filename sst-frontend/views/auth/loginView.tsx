@@ -3,20 +3,27 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/context/AuthContext";
 
 const LoginView = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [contrasena, setContrasena] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1000);
-    router.push("/dashboard");
+    
+    try {
+      await login(correo, contrasena);
+    } catch (err: any) {
+      setError(err.message || "Error al iniciar sesión");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,15 +52,24 @@ const LoginView = () => {
           onSubmit={handleSubmit}
           className="w-full bg-white rounded-3xl p-8 shadow-2xl"
         >
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-semibold mb-2"></label>
+            <label className="block text-gray-700 text-sm font-semibold mb-2">
+              Correo electrónico
+            </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
               placeholder="tu@empresa.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -64,10 +80,11 @@ const LoginView = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition"
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"

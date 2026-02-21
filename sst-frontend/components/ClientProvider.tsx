@@ -2,6 +2,7 @@
 
 import { AuthProvider } from "@/context/AuthContext";
 import { UserAdminProvider } from "@/context/UserAdminContext";
+import { FormatoAdminProvider } from "@/context/FormatoAdminContext";
 
 export default function ClientProvider({
   children,
@@ -10,7 +11,9 @@ export default function ClientProvider({
 }) {
   return (
     <AuthProvider>
-      <UserAdminProvider>{children}</UserAdminProvider>
+      <UserAdminProvider>
+        <FormatoAdminProvider>{children}</FormatoAdminProvider>
+      </UserAdminProvider>
     </AuthProvider>
   );
 }

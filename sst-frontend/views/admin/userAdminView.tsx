@@ -6,106 +6,19 @@ import EditUserModal, {
   UserFormData,
 } from "@/components/modals/user/editUserModal";
 import CreateUserModal from "@/components/modals/user/createUserModal";
+import { useUserAdminContext } from "@/context/UserAdminContext";
+import type { Usuario } from "@/context/UserAdminContext";
 import {
   Users,
   PlusCircle,
   Pencil,
   PowerOff,
+  Trash2,
   Search,
   ChevronDown,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-
-type TipoUsuario = "WORKER" | "ADMIN";
-
-interface Usuario {
-  id: number;
-  nombre: string;
-  apellido: string;
-  dni: string;
-  correo: string;
-  tipo: TipoUsuario;
-  activo: boolean;
-  charlas: string;
-  examen: string;
-  cumpl: number;
-}
-
-const usuariosMock: Usuario[] = [
-  {
-    id: 1,
-    nombre: "Ana",
-    apellido: "Flores",
-    dni: "12345678",
-    correo: "ana@empresa.com",
-    tipo: "WORKER",
-    activo: true,
-    charlas: "28/30",
-    examen: "Aprobado",
-    cumpl: 96,
-  },
-  {
-    id: 2,
-    nombre: "Pedro",
-    apellido: "Salas",
-    dni: "23456789",
-    correo: "pedro@empresa.com",
-    tipo: "WORKER",
-    activo: true,
-    charlas: "20/30",
-    examen: "Pendiente",
-    cumpl: 68,
-  },
-  {
-    id: 3,
-    nombre: "Luis",
-    apellido: "Gómez",
-    dni: "34567890",
-    correo: "luis@empresa.com",
-    tipo: "WORKER",
-    activo: true,
-    charlas: "5/30",
-    examen: "No rendido",
-    cumpl: 20,
-  },
-  {
-    id: 4,
-    nombre: "María",
-    apellido: "Torres",
-    dni: "45678901",
-    correo: "maria@empresa.com",
-    tipo: "WORKER",
-    activo: false,
-    charlas: "25/30",
-    examen: "Bloqueada",
-    cumpl: 72,
-  },
-  {
-    id: 5,
-    nombre: "Carlos",
-    apellido: "Ríos",
-    dni: "56789012",
-    correo: "carlos@empresa.com",
-    tipo: "WORKER",
-    activo: true,
-    charlas: "30/30",
-    examen: "Aprobado",
-    cumpl: 100,
-  },
-  {
-    id: 6,
-    nombre: "Laura",
-    apellido: "Mendoza",
-    dni: "67890123",
-    correo: "laura@empresa.com",
-    tipo: "ADMIN",
-    activo: true,
-    charlas: "—",
-    examen: "—",
-    cumpl: 0,
-  },
-];
 
 const examenBadge = (examen: string) => {
   if (examen === "Aprobado") return "bg-green-100 text-green-700";
@@ -115,9 +28,19 @@ const examenBadge = (examen: string) => {
 };
 
 const UserAdminView = () => {
-  const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosMock);
+  const {
+    usuarios,
+    isLoading,
+    error,
+    createUsuario,
+    updateUsuario,
+    toggleActivo,
+    deleteUsuario,
+  } = useUserAdminContext();
   const [busqueda, setBusqueda] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState<"TODOS" | TipoUsuario>("TODOS");
+  const [filtroTipo, setFiltroTipo] = useState<"TODOS" | "WORKER" | "ADMIN">(
+    "TODOS",
+  );
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
@@ -137,47 +60,44 @@ const UserAdminView = () => {
     setEditModalOpen(true);
   };
 
-  const handleDesactivar = (id: number) => {
-    setUsuarios((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, activo: !u.activo } : u)),
-    );
+  const handleToggleActivo = async (usuario: Usuario) => {
+    try {
+      await toggleActivo(usuario.id, usuario.activo);
+    } catch (err: any) {
+      alert(err.message || "Error al cambiar estado del usuario");
+    }
   };
 
-  const handleSaveEdit = (data: UserFormData) => {
+  const handleSaveEdit = async (data: UserFormData) => {
     if (!usuarioEditando) return;
-    setUsuarios((prev) =>
-      prev.map((u) =>
-        u.id === usuarioEditando.id
-          ? {
-              ...u,
-              nombre: data.nombre,
-              apellido: data.apellido,
-              dni: data.dni,
-              correo: data.correo,
-              tipo: data.tipo,
-            }
-          : u,
-      ),
-    );
-    setEditModalOpen(false);
-    setUsuarioEditando(null);
+    try {
+      await updateUsuario(usuarioEditando.id, data);
+      setEditModalOpen(false);
+      setUsuarioEditando(null);
+    } catch (err: any) {
+      alert(err.message || "Error al actualizar usuario");
+    }
   };
 
-  const handleCreate = (data: UserFormData) => {
-    const nuevo: Usuario = {
-      id: Date.now(),
-      nombre: data.nombre,
-      apellido: data.apellido,
-      dni: data.dni,
-      correo: data.correo,
-      tipo: data.tipo,
-      activo: true,
-      charlas: data.tipo === "WORKER" ? "0/30" : "—",
-      examen: data.tipo === "WORKER" ? "No rendido" : "—",
-      cumpl: 0,
-    };
-    setUsuarios((prev) => [nuevo, ...prev]);
-    setCreateModalOpen(false);
+  const handleCreate = async (data: UserFormData) => {
+    try {
+      await createUsuario(data);
+      setCreateModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Error al crear usuario");
+    }
+  };
+
+  const handleDelete = async (usuario: Usuario) => {
+    const confirmed = window.confirm(
+      `¿Seguro que deseas eliminar al usuario ${usuario.nombre} ${usuario.apellido}?`,
+    );
+    if (!confirmed) return;
+    try {
+      await deleteUsuario(usuario.id);
+    } catch (err: any) {
+      alert(err.message || "Error al eliminar usuario");
+    }
   };
 
   const totalWorkers = usuarios.filter((u) => u.tipo === "WORKER").length;
@@ -381,7 +301,7 @@ const UserAdminView = () => {
                           Editar
                         </button>
                         <button
-                          onClick={() => handleDesactivar(u.id)}
+                          onClick={() => handleToggleActivo(u)}
                           className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                             u.activo
                               ? "text-red-500 bg-red-50 hover:bg-red-100"
@@ -391,6 +311,13 @@ const UserAdminView = () => {
                           <PowerOff size={12} />
                           {u.activo ? "Desactivar" : "Activar"}
                         </button>
+                        <button
+                          onClick={() => handleDelete(u)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition"
+                        >
+                          <Trash2 size={12} />
+                          Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -398,7 +325,12 @@ const UserAdminView = () => {
               </tbody>
             </table>
 
-            {usuariosFiltrados.length === 0 && (
+            {isLoading && (
+              <div className="text-center py-12 text-gray-400">
+                <p className="font-medium">Cargando usuarios...</p>
+              </div>
+            )}
+            {!isLoading && usuariosFiltrados.length === 0 && (
               <div className="text-center py-12 text-gray-400">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="font-medium">No se encontraron usuarios</p>
@@ -406,9 +338,16 @@ const UserAdminView = () => {
             )}
           </div>
 
-          <p className="text-xs text-gray-400 mt-4 text-right">
-            Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios
-          </p>
+          <div className="mt-4 flex justify-between items-center">
+            {error && (
+              <p className="text-xs text-red-500">
+                Error: {error}
+              </p>
+            )}
+            <p className="text-xs text-gray-400 ml-auto">
+              Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios
+            </p>
+          </div>
         </div>
       </div>
 

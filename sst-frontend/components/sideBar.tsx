@@ -18,9 +18,7 @@ import {
   Users,
   UserRoundCog,
 } from "lucide-react";
-
-// TODO: reemplazar con auth real
-const MOCK_USER_ROLE = "ADMIN" as "WORKER" | "ADMIN";
+import { useAuthContext } from "@/context/AuthContext";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -31,6 +29,7 @@ interface MenuItem {
 }
 
 const SideBar = () => {
+  const { user } = useAuthContext();
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -41,6 +40,11 @@ const SideBar = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Si no hay usuario, no mostrar el sidebar
+  if (!user) return null;
+
+  const userRole = user.rol as "WORKER" | "ADMIN";
 
   const baseItems: MenuItem[] = [
     { icon: Home, label: "Inicio", href: "/dashboard" },
@@ -75,7 +79,7 @@ const SideBar = () => {
   };
 
   const menuItems =
-    MOCK_USER_ROLE === "ADMIN"
+    userRole === "ADMIN"
       ? [...baseItems, ...adminOnlyItems, perfilItem]
       : [...baseItems, perfilItem];
 

@@ -3,6 +3,8 @@
 import { AuthProvider } from "@/context/AuthContext";
 import { UserAdminProvider } from "@/context/UserAdminContext";
 import { FormatoAdminProvider } from "@/context/FormatoAdminContext";
+import { DocumentoAdminProvider } from "@/context/DocumentoAdminContext";
+import { CharlaAdminProvider } from "@/context/CharlaAdminContext";
 
 export default function ClientProvider({
   children,
@@ -12,7 +14,11 @@ export default function ClientProvider({
   return (
     <AuthProvider>
       <UserAdminProvider>
-        <FormatoAdminProvider>{children}</FormatoAdminProvider>
+        <FormatoAdminProvider>
+          <DocumentoAdminProvider>
+            <CharlaAdminProvider>{children}</CharlaAdminProvider>
+          </DocumentoAdminProvider>
+        </FormatoAdminProvider>
       </UserAdminProvider>
     </AuthProvider>
   );

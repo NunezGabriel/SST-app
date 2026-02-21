@@ -4,8 +4,15 @@ const progresoCharlaRepository = require("../repositories/progresoCharlaReposito
 const notificacionService = require("./notificacionService");
 const logroService = require("./logroService");
 
-function listarCharlasAdmin() {
-  return charlaRepository.findAll();
+async function listarCharlasAdmin() {
+  const charlas = await charlaRepository.findAll();
+  // Normalizar fechas a formato YYYY-MM-DD para evitar problemas de zona horaria
+  return charlas.map((charla) => ({
+    ...charla,
+    fechaCharla: charla.fechaCharla instanceof Date
+      ? charla.fechaCharla.toISOString().split('T')[0]
+      : new Date(charla.fechaCharla).toISOString().split('T')[0],
+  }));
 }
 
 async function listarCharlasDeUsuario(usuarioId) {
@@ -33,12 +40,17 @@ async function listarCharlasDeUsuario(usuarioId) {
   // Combinar charlas con sus progresos (si existen)
   return charlas.map((charla) => {
     const progreso = progresoMap.get(charla.id);
+    // Normalizar fechaCharla a formato YYYY-MM-DD para evitar problemas de zona horaria
+    const fechaCharlaNormalizada = charla.fechaCharla instanceof Date
+      ? charla.fechaCharla.toISOString().split('T')[0]
+      : new Date(charla.fechaCharla).toISOString().split('T')[0];
+    
     return {
       id: charla.id,
       nombre: charla.nombre,
       enlace: charla.enlace,
       etiqueta: charla.etiqueta,
-      fechaCharla: charla.fechaCharla,
+      fechaCharla: fechaCharlaNormalizada,
       estado: progreso ? progreso.estado : "PENDIENTE",
       fechaCompletada: progreso ? progreso.fechaCompletada : null,
     };

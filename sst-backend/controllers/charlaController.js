@@ -31,11 +31,15 @@ async function crearCharla(req, res) {
         .json({ error: "nombre, enlace y fechaCharla son obligatorios" });
     }
 
+    // Normalizar fecha para evitar problemas de zona horaria
+    const fechaNormalizada = new Date(fechaCharla);
+    fechaNormalizada.setHours(0, 0, 0, 0);
+
     const charla = await charlaService.crearCharla({
       nombre,
       enlace,
       etiqueta,
-      fechaCharla: new Date(fechaCharla),
+      fechaCharla: fechaNormalizada,
     });
 
     res.status(201).json(charla);
@@ -51,7 +55,10 @@ async function actualizarCharla(req, res) {
     const data = req.body;
 
     if (data.fechaCharla) {
-      data.fechaCharla = new Date(data.fechaCharla);
+      // Normalizar fecha para evitar problemas de zona horaria
+      const fechaNormalizada = new Date(data.fechaCharla);
+      fechaNormalizada.setHours(0, 0, 0, 0);
+      data.fechaCharla = fechaNormalizada;
     }
 
     const charla = await charlaService.actualizarCharla(id, data);

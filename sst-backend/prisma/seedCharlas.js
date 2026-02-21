@@ -12,8 +12,11 @@ async function main() {
   console.log("Iniciando seed de 365 charlas...");
 
   // Fechas desde el 2 de enero de 2026 hasta el 31 de diciembre de 2026
-  const fechaInicio = new Date("2026-01-02");
-  const fechaFin = new Date("2026-12-31");
+  // Normalizar fechas para evitar problemas de zona horaria
+  const fechaInicio = new Date(2026, 0, 2); // Año, Mes (0-indexed), Día
+  fechaInicio.setHours(0, 0, 0, 0);
+  const fechaFin = new Date(2026, 11, 31); // Diciembre es mes 11
+  fechaFin.setHours(0, 0, 0, 0);
   
   // Nombres que se alternarán
   const nombres = ["Uso correcto de EPP", "Maniobras de seguridad"];
@@ -30,7 +33,9 @@ async function main() {
   
   // Generar 365 charlas
   while (fechaActual <= fechaFin) {
+    // Normalizar la fecha para evitar problemas de zona horaria
     const fechaCharla = new Date(fechaActual);
+    fechaCharla.setHours(0, 0, 0, 0);
     
     charlas.push({
       nombre: nombres[indiceNombre % nombres.length],
@@ -41,6 +46,7 @@ async function main() {
     
     // Avanzar al siguiente día
     fechaActual.setDate(fechaActual.getDate() + 1);
+    fechaActual.setHours(0, 0, 0, 0);
     indiceNombre++;
   }
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import LayoutComponent from "@/components/layoutComponent";
 import KpiComponent from "@/components/kpiComponent";
 import EditCharlaModal, {
   CharlaFormData,
 } from "@/components/modals/charla/editCharlaModal";
+import { useCharlaAdminContext } from "@/context/CharlaAdminContext";
+import type { Charla } from "@/lib/api/charlas";
 
 import {
   FileText,
@@ -15,107 +17,13 @@ import {
   Search,
   Pencil,
   Users,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
-interface Charla {
-  id: number;
-  nombre: string;
-  enlace: string;
-  fechaCharla: string; // "YYYY-MM-DD"
-}
-
-const charlasMock: Charla[] = [
-  {
-    id: 1,
-    nombre: "Uso Correcto de EPP en Altura",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-01-08",
-  },
-  {
-    id: 2,
-    nombre: "Riesgos Eléctricos Básicos",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-01-22",
-  },
-  {
-    id: 3,
-    nombre: "Ergonomía en el Trabajo",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-02-05",
-  },
-  {
-    id: 4,
-    nombre: "Primeros Auxilios Básicos",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-02-19",
-  },
-  {
-    id: 5,
-    nombre: "Manejo de Residuos Peligrosos",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-03-12",
-  },
-  {
-    id: 6,
-    nombre: "Prevención de Incendios",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-03-26",
-  },
-  {
-    id: 7,
-    nombre: "Señalización de Seguridad",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-04-09",
-  },
-  {
-    id: 8,
-    nombre: "Manejo de Cargas Pesadas",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-04-23",
-  },
-  {
-    id: 9,
-    nombre: "Equipos de Protección Auditiva",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-05-07",
-  },
-  {
-    id: 10,
-    nombre: "Control de Derrames Químicos",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-05-21",
-  },
-  {
-    id: 11,
-    nombre: "Seguridad Vial en Planta",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-06-04",
-  },
-  {
-    id: 12,
-    nombre: "Riesgos Biológicos en el Trabajo",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-06-18",
-  },
-  {
-    id: 13,
-    nombre: "Trabajos en Espacios Confinados",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-07-02",
-  },
-  {
-    id: 14,
-    nombre: "Estrés Laboral y Bienestar",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-07-16",
-  },
-  {
-    id: 15,
-    nombre: "Uso de Extintores",
-    enlace: "https://drive.google.com",
-    fechaCharla: "2025-08-06",
-  },
-];
+// Items por página
+const ITEMS_POR_PAGINA = 31;
 
 const MESES = [
   "Enero",
@@ -133,28 +41,104 @@ const MESES = [
 ];
 
 const CharlasAdminView = () => {
-  const [charlas, setCharlas] = useState<Charla[]>(charlasMock);
+  const {
+    charlas,
+    isLoading,
+    error,
+    createCharla,
+    updateCharla,
+    deleteCharla,
+  } = useCharlaAdminContext();
   const [mesActivo, setMesActivo] = useState<number | null>(null);
   const [busqueda, setBusqueda] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [charlaEditando, setCharlaEditando] = useState<Charla | null>(null);
 
+  // Obtener fecha de hoy (sin hora)
+  const getFechaHoy = () => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return hoy;
+  };
+
+  // Normalizar fecha desde string YYYY-MM-DD o ISO a Date local sin hora
+  const normalizarFecha = (fechaString: string): Date => {
+    // Si viene en formato YYYY-MM-DD, crear fecha local directamente
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaString)) {
+      const [year, month, day] = fechaString.split('-').map(Number);
+      const fecha = new Date(year, month - 1, day); // month es 0-indexed
+      fecha.setHours(0, 0, 0, 0);
+      return fecha;
+    }
+    // Si viene en formato ISO, convertir y normalizar
+    const fecha = new Date(fechaString);
+    fecha.setHours(0, 0, 0, 0);
+    return fecha;
+  };
+
   const mesesConCharlas = useMemo(() => {
     const set = new Set<number>();
-    charlas.forEach((c) => set.add(new Date(c.fechaCharla).getMonth()));
+    charlas.forEach((c) => {
+      const fecha = normalizarFecha(c.fechaCharla);
+      set.add(fecha.getMonth());
+    });
     return set;
   }, [charlas]);
 
-  const charlasFiltradas = useMemo(() => {
-    return charlas.filter((c) => {
+  // Separar charlas en disponibles (hasta hoy) y futuras (desde mañana)
+  const { charlasDisponibles, charlasFuturas } = useMemo(() => {
+    const hoy = getFechaHoy();
+    const disponibles: Charla[] = [];
+    const futuras: Charla[] = [];
+
+    charlas.forEach((c) => {
+      const fecha = normalizarFecha(c.fechaCharla);
       const coincideMes =
-        mesActivo === null || new Date(c.fechaCharla).getMonth() === mesActivo;
+        mesActivo === null || fecha.getMonth() === mesActivo;
       const coincideBusqueda = c.nombre
         .toLowerCase()
         .includes(busqueda.toLowerCase());
-      return coincideMes && coincideBusqueda;
+
+      if (coincideMes && coincideBusqueda) {
+        if (fecha <= hoy) {
+          disponibles.push(c);
+        } else {
+          futuras.push(c);
+        }
+      }
     });
+
+    // Ordenar disponibles: más reciente primero (descendente)
+    disponibles.sort((a, b) => {
+      const fechaA = normalizarFecha(a.fechaCharla).getTime();
+      const fechaB = normalizarFecha(b.fechaCharla).getTime();
+      return fechaB - fechaA;
+    });
+
+    // Ordenar futuras: más próxima primero (ascendente)
+    futuras.sort((a, b) => {
+      const fechaA = normalizarFecha(a.fechaCharla).getTime();
+      const fechaB = normalizarFecha(b.fechaCharla).getTime();
+      return fechaA - fechaB;
+    });
+
+    return { charlasDisponibles: disponibles, charlasFuturas: futuras };
   }, [charlas, mesActivo, busqueda]);
+
+  // Combinar ambas listas: disponibles primero, luego futuras
+  const todasLasCharlas = [...charlasDisponibles, ...charlasFuturas];
+
+  // Paginación
+  const totalPaginas = Math.ceil(todasLasCharlas.length / ITEMS_POR_PAGINA);
+  const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
+  const fin = inicio + ITEMS_POR_PAGINA;
+  const charlasFiltradas = todasLasCharlas.slice(inicio, fin);
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [mesActivo, busqueda]);
 
   const handleEditarClick = (charla: Charla) => {
     setCharlaEditando(charla);
@@ -166,13 +150,51 @@ const CharlasAdminView = () => {
     setCharlaEditando(null);
   };
 
-  const handleSave = (data: CharlaFormData) => {
+  const handleSave = async (data: CharlaFormData) => {
     if (!charlaEditando) return;
-    setCharlas((prev) =>
-      prev.map((c) => (c.id === charlaEditando.id ? { ...c, ...data } : c)),
-    );
-    handleCloseModal();
+    try {
+      // El modal solo envía nombre y enlace, pero necesitamos mantener fechaCharla y etiqueta
+      await updateCharla(charlaEditando.id, {
+        nombre: data.nombre,
+        enlace: data.enlace,
+        fechaCharla: charlaEditando.fechaCharla,
+        etiqueta: charlaEditando.etiqueta || null,
+      });
+      handleCloseModal();
+    } catch (err: any) {
+      alert(err.message || "Error al guardar cambios");
+    }
   };
+
+  const handleEliminar = async (id: number) => {
+    if (
+      window.confirm(
+        "¿Estás seguro de que quieres eliminar esta charla? Esta acción es irreversible."
+      )
+    ) {
+      try {
+        await deleteCharla(id);
+      } catch (err: any) {
+        alert(err.message || "Error al eliminar charla");
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12">Cargando charlas...</div>
+      </LayoutComponent>
+    );
+  }
+
+  if (error) {
+    return (
+      <LayoutComponent>
+        <div className="text-center py-12 text-red-500">Error: {error}</div>
+      </LayoutComponent>
+    );
+  }
 
   return (
     <LayoutComponent>
@@ -292,60 +314,199 @@ const CharlasAdminView = () => {
               </p>
             </div>
           ) : (
-            charlasFiltradas.map((charla) => {
-              const fechaLabel = new Date(
-                charla.fechaCharla,
-              ).toLocaleDateString("es-PE", {
-                day: "2-digit",
-                month: "long",
-              });
+            <>
+              {/* Separador si hay charlas disponibles y futuras */}
+              {charlasDisponibles.length > 0 && charlasFuturas.length > 0 && (
+                <div className="border-t border-gray-200 pt-4">
+                  <h2 className="text-sm font-semibold text-gray-500 mb-4">
+                    Charlas Disponibles
+                  </h2>
+                </div>
+              )}
 
-              return (
-                <div
-                  key={charla.id}
-                  className="group bg-white rounded-2xl shadow-sm border-2 border-gray-100 hover:border-cyan-300 px-6 py-5 flex items-center justify-between gap-6 transition-all hover:shadow-md"
-                >
-                  {/* Icono */}
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm shrink-0 bg-blue-100 text-[#003366] group-hover:scale-110 transition-transform">
-                    <FileText className="w-6 h-6" />
-                  </div>
+              {charlasFiltradas.map((charla) => {
+                // Determinar si está en la sección de disponibles o futuras
+                const esDisponible = charlasDisponibles.includes(charla);
+                const indiceEnLista = charlasFiltradas.indexOf(charla);
+                const esPrimeraFutura =
+                  !esDisponible && indiceEnLista === charlasDisponibles.length;
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span>📅 {fechaLabel}</span>
-                      <a
-                        href={charla.enlace}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:underline truncate max-w-[200px]"
-                        onClick={(e) => e.stopPropagation()}
+                const fechaObj = normalizarFecha(charla.fechaCharla);
+                const fechaLabel = fechaObj.toLocaleDateString("es-PE", {
+                  day: "2-digit",
+                  month: "long",
+                });
+
+                const esFutura = (() => {
+                  const fecha = normalizarFecha(charla.fechaCharla);
+                  const hoy = getFechaHoy();
+                  return fecha > hoy;
+                })();
+
+                return (
+                  <div key={charla.id}>
+                    {/* Separador para primera charla futura */}
+                    {esPrimeraFutura && charlasDisponibles.length > 0 && (
+                      <div className="border-t border-gray-200 pt-4 mb-4">
+                        <h2 className="text-sm font-semibold text-gray-500 mb-4">
+                          Próximas Charlas
+                        </h2>
+                      </div>
+                    )}
+                    <div
+                      className={`group rounded-2xl shadow-sm border-2 px-6 py-5 flex items-center justify-between gap-6 transition-all ${
+                        esFutura
+                          ? "bg-gray-50 border-gray-200 opacity-75"
+                          : "bg-white border-gray-100 hover:border-cyan-300 hover:shadow-md"
+                      }`}
+                    >
+                      {/* Icono */}
+                      <div
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm shrink-0 group-hover:scale-110 transition-transform ${
+                          esFutura
+                            ? "bg-gray-200 text-gray-400"
+                            : "bg-blue-100 text-[#003366]"
+                        }`}
                       >
-                        Ver en Drive →
-                      </a>
+                        <FileText className="w-6 h-6" />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h2
+                            className={`text-base font-bold truncate ${
+                              esFutura ? "text-gray-500" : "text-gray-900"
+                            }`}
+                          >
+                            {charla.nombre}
+                          </h2>
+                          {esFutura && (
+                            <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold">
+                              Próximamente
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <span>📅 {fechaLabel}</span>
+                          <a
+                            href={charla.enlace}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-600 hover:underline truncate max-w-[200px]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Ver en Drive →
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Botones */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditarClick(charla)}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm bg-[#003366] text-white hover:bg-[#004080] shadow transition-all hover:scale-105 whitespace-nowrap"
+                        >
+                          <Pencil size={14} />
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleEliminar(charla.id)}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-all whitespace-nowrap"
+                        >
+                          <Trash2 size={14} />
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+            </>
+          )}
 
-                  {/* Botón editar */}
-                  <button
-                    onClick={() => handleEditarClick(charla)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm bg-[#003366] text-white hover:bg-[#004080] shadow transition-all hover:scale-105 whitespace-nowrap"
-                  >
-                    <Pencil size={14} />
-                    Editar
-                  </button>
-                </div>
-              );
-            })
+          {/* Paginación */}
+          {totalPaginas > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button
+                onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
+                disabled={paginaActual === 1}
+                className={`p-2 rounded-lg border transition-all ${
+                  paginaActual === 1
+                    ? "bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-cyan-300"
+                }`}
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(
+                  (pagina) => {
+                    // Mostrar solo páginas cercanas a la actual
+                    if (
+                      pagina === 1 ||
+                      pagina === totalPaginas ||
+                      (pagina >= paginaActual - 1 && pagina <= paginaActual + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pagina}
+                          onClick={() => setPaginaActual(pagina)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                            pagina === paginaActual
+                              ? "bg-[#003366] text-white"
+                              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-cyan-300"
+                          }`}
+                        >
+                          {pagina}
+                        </button>
+                      );
+                    } else if (
+                      pagina === paginaActual - 2 ||
+                      pagina === paginaActual + 2
+                    ) {
+                      return (
+                        <span key={pagina} className="px-2 text-gray-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+                )}
+              </div>
+
+              <button
+                onClick={() =>
+                  setPaginaActual((p) => Math.min(totalPaginas, p + 1))
+                }
+                disabled={paginaActual === totalPaginas}
+                className={`p-2 rounded-lg border transition-all ${
+                  paginaActual === totalPaginas
+                    ? "bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-cyan-300"
+                }`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+
+          {/* Footer count */}
+          {todasLasCharlas.length > 0 && (
+            <p className="text-center text-xs text-gray-400">
+              Mostrando {inicio + 1}-{Math.min(fin, todasLasCharlas.length)} de{" "}
+              {todasLasCharlas.length} charlas
+              {charlasDisponibles.length > 0 && charlasFuturas.length > 0 && (
+                <span className="ml-2">
+                  ({charlasDisponibles.length} disponibles,{" "}
+                  {charlasFuturas.length} próximas)
+                </span>
+              )}
+            </p>
           )}
         </div>
-
-        {/* Footer count */}
-        {charlasFiltradas.length > 0 && (
-          <p className="text-center text-xs text-gray-400">
-            Mostrando {charlasFiltradas.length} de {charlas.length} charlas
-          </p>
-        )}
       </div>
 
       {/* ── Modal ── */}

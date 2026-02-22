@@ -19,6 +19,7 @@ import {
   UserRoundCog,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { useNotificacionContext } from "@/context/NotificacionContext";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -30,6 +31,7 @@ interface MenuItem {
 
 const SideBar = () => {
   const { user } = useAuthContext();
+  const { unreadCount } = useNotificacionContext();
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -60,7 +62,7 @@ const SideBar = () => {
       href: "/formatos",
     },
     { icon: Shield, label: "Induccion", href: "/induccion" },
-    { icon: Bell, label: "Alertas", href: "/alertas", badge: 3 },
+    { icon: Bell, label: "Alertas", href: "/alertas", badge: unreadCount },
   ];
 
   const adminOnlyItems: MenuItem[] = [

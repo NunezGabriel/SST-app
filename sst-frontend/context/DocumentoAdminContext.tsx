@@ -16,11 +16,11 @@ import {
   createDocumentoRequest,
   updateDocumentoRequest,
   deleteDocumentoRequest,
-  Documento as DocumentoAPI,
-  DocumentoUsuario,
-  TipoDocumento,
+  type Documento,
+  type DocumentoUsuario,
+  type TipoDocumento,
 } from "@/lib/api/documentos";
-import { DocumentoFormData } from "@/components/modals/documento/editDocumentoModal";
+import type { DocumentoFormData } from "@/components/modals/documento/editDocumentoModal";
 
 // Re-exportar tipos de la API
 export type { Documento, DocumentoUsuario } from "@/lib/api/documentos";

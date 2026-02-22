@@ -8,61 +8,62 @@ const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
-  console.log("Iniciando seed de 365 charlas...");
+/**
+ * Genera un string de fecha UTC seguro a partir de año, mes (1-indexed) y día.
+ * Usa las 12:00:00 UTC para que ningún offset de zona horaria desfase el día.
+ */
+function fechaUTC(year, month, day) {
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return new Date(`${year}-${mm}-${dd}T12:00:00.000Z`);
+}
 
-  // Fechas desde el 2 de enero de 2026 hasta el 31 de diciembre de 2026
-  // Normalizar fechas para evitar problemas de zona horaria
-  const fechaInicio = new Date(2026, 0, 2); // Año, Mes (0-indexed), Día
-  fechaInicio.setHours(0, 0, 0, 0);
-  const fechaFin = new Date(2026, 11, 31); // Diciembre es mes 11
-  fechaFin.setHours(0, 0, 0, 0);
-  
-  // Nombres que se alternarán
+/**
+ * Avanza un día sobre una fecha representada como { year, month, day } (month 1-indexed).
+ * Usa operaciones de calendario puro sin depender de Date local.
+ */
+function siguienteDia({ year, month, day }) {
+  const d = new Date(Date.UTC(year, month - 1, day + 1));
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+}
+
+async function main() {
+  console.log("Iniciando seed de charlas (2 ene 2026 → 31 dic 2026)...");
+
   const nombres = ["Uso correcto de EPP", "Maniobras de seguridad"];
-  
-  // Etiqueta fija
   const etiqueta = "seguridad";
-  
-  // Enlace base de Google Drive (inventado, se modificará después)
-  const enlaceBase = "https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsTuVwXyZ123456/view?usp=sharing";
-  
+  const enlaceBase =
+    "https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsTuVwXyZ123456/view?usp=sharing";
+
   const charlas = [];
-  let fechaActual = new Date(fechaInicio);
-  let indiceNombre = 0;
-  
-  // Generar 365 charlas
-  while (fechaActual <= fechaFin) {
-    // Normalizar la fecha para evitar problemas de zona horaria
-    const fechaCharla = new Date(fechaActual);
-    fechaCharla.setHours(0, 0, 0, 0);
-    
+  let actual = { year: 2026, month: 1, day: 2 };   // 2 de enero de 2026
+  const fin   = { year: 2026, month: 12, day: 31 }; // 31 de diciembre de 2026
+  let indice = 0;
+
+  while (
+    actual.year < fin.year ||
+    (actual.year === fin.year && actual.month < fin.month) ||
+    (actual.year === fin.year && actual.month === fin.month && actual.day <= fin.day)
+  ) {
     charlas.push({
-      nombre: nombres[indiceNombre % nombres.length],
+      nombre: nombres[indice % nombres.length],
       enlace: enlaceBase,
       etiqueta: etiqueta,
-      fechaCharla: fechaCharla,
+      fechaCharla: fechaUTC(actual.year, actual.month, actual.day),
     });
-    
-    // Avanzar al siguiente día
-    fechaActual.setDate(fechaActual.getDate() + 1);
-    fechaActual.setHours(0, 0, 0, 0);
-    indiceNombre++;
+    actual = siguienteDia(actual);
+    indice++;
   }
 
   try {
-    // Eliminar todas las charlas existentes (opcional, comentar si no se desea)
-    // await prisma.charla.deleteMany({});
+    await prisma.charla.deleteMany({});
 
-    // Crear las charlas
     for (const charla of charlas) {
-      await prisma.charla.create({
-        data: charla,
-      });
+      await prisma.charla.create({ data: charla });
     }
 
     console.log(`✅ Se crearon ${charlas.length} charlas exitosamente`);
-    console.log(`   - Rango de fechas: ${fechaInicio.toISOString().split('T')[0]} hasta ${fechaFin.toISOString().split('T')[0]}`);
+    console.log(`   - Rango: 2026-01-02 → 2026-12-31`);
     console.log(`   - Etiqueta: ${etiqueta}`);
     console.log(`   - Nombres alternados: ${nombres.join(" / ")}`);
   } catch (error) {

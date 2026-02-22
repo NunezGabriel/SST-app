@@ -16,12 +16,12 @@ import {
   createCharlaRequest,
   updateCharlaRequest,
   deleteCharlaRequest,
-  Charla as CharlaAPI,
-  CharlaFormData,
+  type Charla,
+  type CharlaFormData,
 } from "@/lib/api/charlas";
 
 // Re-exportar tipos de la API
-export type { Charla } from "@/lib/api/charlas";
+export type { Charla, CharlaFormData } from "@/lib/api/charlas";
 
 interface CharlaAdminContextType {
   charlas: Charla[];

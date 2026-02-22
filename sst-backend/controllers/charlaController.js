@@ -31,9 +31,10 @@ async function crearCharla(req, res) {
         .json({ error: "nombre, enlace y fechaCharla son obligatorios" });
     }
 
-    // Normalizar fecha para evitar problemas de zona horaria
-    const fechaNormalizada = new Date(fechaCharla);
-    fechaNormalizada.setHours(0, 0, 0, 0);
+    // Extraer solo la parte YYYY-MM-DD y almacenar al mediodía UTC
+    // para que ningún offset de zona horaria desfase el día.
+    const soloFecha = String(fechaCharla).substring(0, 10); // "YYYY-MM-DD"
+    const fechaNormalizada = new Date(`${soloFecha}T12:00:00.000Z`);
 
     const charla = await charlaService.crearCharla({
       nombre,
@@ -55,10 +56,10 @@ async function actualizarCharla(req, res) {
     const data = req.body;
 
     if (data.fechaCharla) {
-      // Normalizar fecha para evitar problemas de zona horaria
-      const fechaNormalizada = new Date(data.fechaCharla);
-      fechaNormalizada.setHours(0, 0, 0, 0);
-      data.fechaCharla = fechaNormalizada;
+      // Extraer solo YYYY-MM-DD y guardar al mediodía UTC
+      // para evitar el desfase de -1 día al re-normalizar con hora local.
+      const soloFecha = String(data.fechaCharla).substring(0, 10);
+      data.fechaCharla = new Date(`${soloFecha}T12:00:00.000Z`);
     }
 
     const charla = await charlaService.actualizarCharla(id, data);

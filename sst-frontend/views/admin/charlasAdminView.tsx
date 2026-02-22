@@ -62,19 +62,13 @@ const CharlasAdminView = () => {
     return hoy;
   };
 
-  // Normalizar fecha desde string YYYY-MM-DD o ISO a Date local sin hora
+  // Normalizar fecha: extrae siempre los primeros 10 chars (YYYY-MM-DD)
+  // de cualquier formato ISO o date-only, y construye una fecha LOCAL.
+  // Esto evita el desfase de zona horaria en getMonth/getDate/comparaciones.
   const normalizarFecha = (fechaString: string): Date => {
-    // Si viene en formato YYYY-MM-DD, crear fecha local directamente
-    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaString)) {
-      const [year, month, day] = fechaString.split('-').map(Number);
-      const fecha = new Date(year, month - 1, day); // month es 0-indexed
-      fecha.setHours(0, 0, 0, 0);
-      return fecha;
-    }
-    // Si viene en formato ISO, convertir y normalizar
-    const fecha = new Date(fechaString);
-    fecha.setHours(0, 0, 0, 0);
-    return fecha;
+    const soloFecha = fechaString.substring(0, 10); // "YYYY-MM-DD"
+    const [year, month, day] = soloFecha.split('-').map(Number);
+    return new Date(year, month - 1, day); // mes 0-indexed, hora 00:00 local
   };
 
   const mesesConCharlas = useMemo(() => {
@@ -229,10 +223,11 @@ const CharlasAdminView = () => {
           <KpiComponent
             title="Este Mes"
             value={
-              charlas.filter(
-                (c) =>
-                  new Date(c.fechaCharla).getMonth() === new Date().getMonth(),
-              ).length
+              charlas.filter((c) => {
+                const soloFecha = c.fechaCharla.substring(0, 10);
+                const [y, m] = soloFecha.split('-').map(Number);
+                return m - 1 === new Date().getMonth();
+              }).length
             }
             showProgressBar={false}
             showIcon

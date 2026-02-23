@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // ← IMPORTAR usePathname
 import {
   Home,
   BookOpen,
@@ -32,6 +33,7 @@ interface MenuItem {
 const SideBar = () => {
   const { user } = useAuthContext();
   const { unreadCount } = useNotificacionContext();
+  const pathname = usePathname(); // ← OBTENER RUTA ACTUAL
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -88,6 +90,11 @@ const SideBar = () => {
     userRole === "ADMIN"
       ? [...baseItems, ...adminOnlyItems, perfilItem]
       : [...baseItems, ...workerOnlyItems, perfilItem];
+
+  // ← FUNCIÓN PARA VERIFICAR SI LA RUTA ESTÁ ACTIVA
+  const isActive = (href: string) => {
+    return pathname === href || pathname?.startsWith(href + "/");
+  };
 
   return (
     <>
@@ -153,6 +160,8 @@ const SideBar = () => {
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href); // ← VERIFICAR SI ESTÁ ACTIVO
+
               return (
                 <li key={item.href}>
                   {/* Separador visual antes de sección admin */}
@@ -166,8 +175,12 @@ const SideBar = () => {
                     onClick={() => {
                       if (isMobile) setIsOpen(false);
                     }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#1a4876] transition duration-200 group relative ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition duration-200 group relative ${
                       !isExpanded && "lg:justify-center lg:px-2"
+                    } ${
+                      active
+                        ? "bg-[#00d3f2] text-[#003366] font-semibold shadow-lg" // ← ESTILO ACTIVO
+                        : "hover:bg-[#1a4876]" // ← ESTILO HOVER
                     }`}
                     title={!isExpanded ? item.label : ""}
                   >
@@ -184,7 +197,9 @@ const SideBar = () => {
                     </div>
                     {(isExpanded || isMobile) && (
                       <>
-                        <span className="font-medium text-sm flex-1">
+                        <span
+                          className={`text-sm flex-1 ${active ? "font-bold" : "font-medium"}`}
+                        >
                           {item.label}
                         </span>
                         {"badge" in item && item.badge !== undefined && (

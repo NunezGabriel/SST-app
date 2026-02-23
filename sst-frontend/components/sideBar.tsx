@@ -62,6 +62,10 @@ const SideBar = () => {
       href: "/formatos",
     },
     { icon: Shield, label: "Induccion", href: "/induccion" },
+  ];
+
+  // Solo visible para workers
+  const workerOnlyItems: MenuItem[] = [
     { icon: Bell, label: "Alertas", href: "/alertas", badge: unreadCount },
   ];
 
@@ -83,7 +87,7 @@ const SideBar = () => {
   const menuItems =
     userRole === "ADMIN"
       ? [...baseItems, ...adminOnlyItems, perfilItem]
-      : [...baseItems, perfilItem];
+      : [...baseItems, ...workerOnlyItems, perfilItem];
 
   return (
     <>
@@ -170,7 +174,7 @@ const SideBar = () => {
                     <div className="relative shrink-0">
                       <Icon size={20} />
                       {"badge" in item &&
-                        item.badge &&
+                        item.badge !== undefined &&
                         !isExpanded &&
                         !isMobile && (
                           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -183,7 +187,7 @@ const SideBar = () => {
                         <span className="font-medium text-sm flex-1">
                           {item.label}
                         </span>
-                        {"badge" in item && item.badge && (
+                        {"badge" in item && item.badge !== undefined && (
                           <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shrink-0">
                             {item.badge}
                           </span>

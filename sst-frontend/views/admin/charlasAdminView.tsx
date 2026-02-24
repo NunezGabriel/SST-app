@@ -7,6 +7,7 @@ import EditCharlaModal, {
   CharlaFormData,
 } from "@/components/modals/charla/editCharlaModal";
 import { useCharlaAdminContext } from "@/context/CharlaAdminContext";
+import { useUserAdminContext } from "@/context/UserAdminContext";
 import type { Charla } from "@/lib/api/charlas";
 
 import {
@@ -41,6 +42,8 @@ const MESES = [
 ];
 
 const CharlasAdminView = () => {
+  const { usuarios } = useUserAdminContext();
+  const workersActivos = usuarios.filter((u) => u.activo).length;
   const {
     charlas,
     isLoading,
@@ -236,7 +239,7 @@ const CharlasAdminView = () => {
           />
           <KpiComponent
             title="Workers Asignados"
-            value="42"
+            value={String(workersActivos)}
             showProgressBar={false}
             showIcon
             icon={Users}

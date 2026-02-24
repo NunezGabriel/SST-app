@@ -122,12 +122,7 @@ const SideBar = () => {
         <div className={`p-6 ${!isExpanded && "lg:p-4"}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-              <Image
-                src="/sst-icon.png"
-                alt="SST Logo"
-                width={50}
-                height={50}
-              />
+              <Image src="/icon.png" alt="HSE Logo" width={50} height={50} />
             </div>
             {(isExpanded || isMobile) && (
               <div>

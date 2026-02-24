@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SST App",
+  title: "HSE App",
   description: "Sistema de Seguridad y Salud en el Trabajo",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

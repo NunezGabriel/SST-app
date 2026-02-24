@@ -17,7 +17,7 @@ const LoginView = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-    
+
     try {
       await login(correo, contrasena);
     } catch (err: any) {
@@ -30,10 +30,10 @@ const LoginView = () => {
     <div className="min-h-screen bg-[#003d70] flex flex-col items-center justify-center px-4 py-8">
       <div className="flex flex-col items-center justify-center w-full max-w-md">
         <div className="mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-opacity-50 flex items-center justify-center border border-blue-400 border-opacity-30">
+          <div className="w-20 h-20 rounded-2xl bg-opacity-50 flex items-center justify-center">
             <Image
-              src="/sst-icon.png"
-              alt="SST App Logo"
+              src="/icon.png"
+              alt="HSE Logo"
               width={80}
               height={80}
               priority
@@ -42,10 +42,8 @@ const LoginView = () => {
         </div>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">SST App</h1>
-          <p className="text-blue-200 text-sm">
-            Seguridad y Salud en el Trabajo
-          </p>
+          <h1 className="text-4xl font-bold text-white mb-2">HSE App</h1>
+          <p className="text-blue-200 text-sm">Health Safety & Enviorment</p>
         </div>
 
         <form

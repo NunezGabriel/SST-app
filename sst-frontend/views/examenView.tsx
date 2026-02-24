@@ -43,7 +43,11 @@ const ExamenView = () => {
 
   // Cargar preguntas al montar
   useEffect(() => {
-    if (user?.rol === "WORKER" && preguntasExamen.length === 0 && !isLoadingExamen) {
+    if (
+      user?.rol === "WORKER" &&
+      preguntasExamen.length === 0 &&
+      !isLoadingExamen
+    ) {
       handleGenerarPreguntas();
     }
   }, [user?.rol]);
@@ -72,7 +76,10 @@ const ExamenView = () => {
 
   const handleSeleccionar = (op: Opcion) => {
     if (!preguntasExamen[preguntaActual]) return;
-    setRespuestas((prev) => ({ ...prev, [preguntasExamen[preguntaActual].id]: op }));
+    setRespuestas((prev) => ({
+      ...prev,
+      [preguntasExamen[preguntaActual].id]: op,
+    }));
   };
 
   const handleSiguiente = () => {
@@ -92,7 +99,7 @@ const ExamenView = () => {
       const faltantes = preguntasExamen.length - Object.keys(respuestas).length;
       if (
         !confirm(
-          `Tienes ${faltantes} pregunta(s) sin responder. ¿Deseas finalizar el examen de todas formas?`
+          `Tienes ${faltantes} pregunta(s) sin responder. ¿Deseas finalizar el examen de todas formas?`,
         )
       ) {
         return;
@@ -114,7 +121,9 @@ const ExamenView = () => {
   const handleResetearBloqueo = async () => {
     try {
       await resetearBloqueo();
-      alert("Bloqueo reseteado. Ahora puedes ver el video de inducción y volver a intentar.");
+      alert(
+        "Bloqueo reseteado. Ahora puedes ver el video de inducción y volver a intentar.",
+      );
       router.push("/induccion");
     } catch (error: any) {
       alert(error.message || "Error al resetear bloqueo");
@@ -126,7 +135,7 @@ const ExamenView = () => {
     const bloqueadoHasta = new Date(estadoExamen.bloqueadoHasta);
     const ahora = new Date();
     const minutosRestantes = Math.ceil(
-      (bloqueadoHasta.getTime() - ahora.getTime()) / (1000 * 60)
+      (bloqueadoHasta.getTime() - ahora.getTime()) / (1000 * 60),
     );
 
     return (
@@ -140,14 +149,17 @@ const ExamenView = () => {
                   <Lock className="w-14 h-14 text-red-500" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Examen Bloqueado</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Examen Bloqueado
+                  </h2>
                   <p className="text-gray-500 mt-2 text-sm">
                     Has agotado tus {estadoExamen.intentosMaximos} intentos.
                   </p>
                 </div>
                 <div className="bg-red-50 rounded-2xl p-6">
                   <p className="text-sm text-gray-600 mb-2">
-                    Debes ver el video de inducción nuevamente antes de poder volver a intentar.
+                    Debes ver el video de inducción nuevamente antes de poder
+                    volver a intentar.
                   </p>
                   {minutosRestantes > 0 && (
                     <p className="text-lg font-bold text-red-600">
@@ -167,7 +179,7 @@ const ExamenView = () => {
                     onClick={() => router.push("/dashboard")}
                     className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-sm transition"
                   >
-                    Ir al Dashboard
+                    Volver al panel de Inicio
                   </button>
                 </div>
               </div>
@@ -222,7 +234,9 @@ const ExamenView = () => {
         <div className="min-h-screen bg-[#F5FAFF] flex items-center justify-center py-10">
           <div className="w-full max-w-lg">
             <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-10 text-center space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Examen de Inducción</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Examen de Inducción
+              </h2>
               <p className="text-gray-600">
                 Haz clic en el botón para comenzar el examen.
               </p>
@@ -302,13 +316,17 @@ const ExamenView = () => {
                       /{resultado.puntajeTotal}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">respuestas correctas</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    respuestas correctas
+                  </p>
                   <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
                         aprobado ? "bg-emerald-500" : "bg-red-500"
                       }`}
-                      style={{ width: `${(resultado.puntaje / resultado.puntajeTotal) * 100}%` }}
+                      style={{
+                        width: `${(resultado.puntaje / resultado.puntajeTotal) * 100}%`,
+                      }}
                     />
                   </div>
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -329,22 +347,28 @@ const ExamenView = () => {
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 pt-2">
-                  {!aprobado && estadoExamen && estadoExamen.intentosUsados < estadoExamen.intentosMaximos && (
-                    <button
-                      onClick={handleGenerarPreguntas}
-                      className="w-full py-3 rounded-xl bg-[#003366] text-white font-bold text-sm hover:bg-[#004080] transition"
-                    >
-                      Intentar Nuevamente
-                    </button>
-                  )}
-                  {!aprobado && estadoExamen && estadoExamen.intentosUsados >= estadoExamen.intentosMaximos && (
-                    <button
-                      onClick={() => router.push("/induccion")}
-                      className="w-full py-3 rounded-xl bg-[#003366] text-white font-bold text-sm hover:bg-[#004080] transition"
-                    >
-                      Volver a ver el material de inducción
-                    </button>
-                  )}
+                  {!aprobado &&
+                    estadoExamen &&
+                    estadoExamen.intentosUsados <
+                      estadoExamen.intentosMaximos && (
+                      <button
+                        onClick={handleGenerarPreguntas}
+                        className="w-full py-3 rounded-xl bg-[#003366] text-white font-bold text-sm hover:bg-[#004080] transition"
+                      >
+                        Intentar Nuevamente
+                      </button>
+                    )}
+                  {!aprobado &&
+                    estadoExamen &&
+                    estadoExamen.intentosUsados >=
+                      estadoExamen.intentosMaximos && (
+                      <button
+                        onClick={() => router.push("/induccion")}
+                        className="w-full py-3 rounded-xl bg-[#003366] text-white font-bold text-sm hover:bg-[#004080] transition"
+                      >
+                        Volver a ver el material de inducción
+                      </button>
+                    )}
                   <button
                     onClick={() => router.push("/dashboard")}
                     className={`w-full py-3 rounded-xl font-bold text-sm transition ${
@@ -353,7 +377,7 @@ const ExamenView = () => {
                         : "border border-gray-200 text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    Ir al Dashboard
+                    Volver al panel de Inicio
                   </button>
                 </div>
               </div>
@@ -384,7 +408,9 @@ const ExamenView = () => {
 
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h1 className="text-2xl font-bold text-[#022B54]">Examen de Inducción</h1>
+                <h1 className="text-2xl font-bold text-[#022B54]">
+                  Examen de Inducción
+                </h1>
                 <p className="text-sm text-gray-500 mt-0.5">
                   Pregunta{" "}
                   <span className="font-semibold text-gray-700">
@@ -392,7 +418,9 @@ const ExamenView = () => {
                   </span>{" "}
                   de {total}
                   <span className="mx-2 text-gray-300">·</span>
-                  <span className="text-gray-500">{respondidas} respondidas</span>
+                  <span className="text-gray-500">
+                    {respondidas} respondidas
+                  </span>
                 </p>
               </div>
               <div className="text-right">
@@ -460,7 +488,9 @@ const ExamenView = () => {
                         </div>
                         <span
                           className={`flex-1 leading-snug ${
-                            seleccionada ? "text-gray-900 font-medium" : "text-gray-700"
+                            seleccionada
+                              ? "text-gray-900 font-medium"
+                              : "text-gray-700"
                           }`}
                         >
                           {texto}

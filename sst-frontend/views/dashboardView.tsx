@@ -35,14 +35,15 @@ const DashboardView = () => {
 
   // Charla del día: la primera charla cuya fechaCharla coincide con hoy y está pendiente
   const todayStr = hoy.toISOString().split("T")[0]; // "YYYY-MM-DD"
-  const charlaDelDia = charlasUsuario.find(
-    (c) => c.fechaCharla === todayStr && c.estado === "PENDIENTE"
-  ) ?? null;
+  const charlaDelDia =
+    charlasUsuario.find(
+      (c) => c.fechaCharla === todayStr && c.estado === "PENDIENTE",
+    ) ?? null;
 
   // KPIs de charlas
   const totalCharlas = charlasUsuario.length;
   const completadas = charlasUsuario.filter(
-    (c) => c.estado === "COMPLETADA"
+    (c) => c.estado === "COMPLETADA",
   ).length;
   const cumplimientoPct =
     totalCharlas > 0 ? Math.round((completadas / totalCharlas) * 100) : 0;
@@ -53,7 +54,7 @@ const DashboardView = () => {
     .sort(
       (a, b) =>
         new Date(b.fechaCompletada!).getTime() -
-        new Date(a.fechaCompletada!).getTime()
+        new Date(a.fechaCompletada!).getTime(),
     )
     .slice(0, 3);
 
@@ -122,7 +123,7 @@ const DashboardView = () => {
               ) : (
                 <>
                   <h2 className="text-3xl font-bold mb-3 text-black">
-                    No hay charla programada para hoy
+                    Ya completaste tu charla de hoy
                   </h2>
                   <p className="text-gray-500 text-lg">
                     Revisa tu listado de charlas pendientes
@@ -270,9 +271,7 @@ const DashboardView = () => {
                     <p className="font-semibold text-gray-500">
                       Aún no has completado ninguna charla
                     </p>
-                    <p className="text-sm text-gray-400">
-                      ¡Comienza hoy!
-                    </p>
+                    <p className="text-sm text-gray-400">¡Comienza hoy!</p>
                   </div>
                 </div>
               )}

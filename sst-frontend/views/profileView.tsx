@@ -25,6 +25,7 @@ import {
   Trophy,
   Star,
   BadgeCheck,
+  RefreshCw,
 } from "lucide-react";
 
 // Mapeo icono backend → componente lucide
@@ -38,12 +39,49 @@ const iconMap: Record<string, React.ElementType> = {
 export default function ProfileView() {
   const router = useRouter();
   const { user, logout } = useAuthContext();
-  const { charlasUsuario } = useCharlaAdminContext();
-  const { documentosUsuario } = useDocumentoAdminContext();
-  const { logrosUsuario, logrosAdmin, isLoading: logrosLoading } = useLogroContext();
-  const [usuarioCompleto, setUsuarioCompleto] = useState<UsuarioCompleto | null>(null);
+  const { charlasUsuario, reloadUsuario: reloadCharlas } =
+    useCharlaAdminContext();
+  const { documentosUsuario, reloadUsuario: reloadDocumentos } =
+    useDocumentoAdminContext();
+  const {
+    logrosUsuario,
+    logrosAdmin,
+    isLoading: logrosLoading,
+    reload: reloadLogros,
+  } = useLogroContext();
+  const [usuarioCompleto, setUsuarioCompleto] =
+    useState<UsuarioCompleto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // ── FUNCIÓN PARA REFRESCAR TODOS LOS DATOS ──
+  const refreshAllData = async () => {
+    if (!user?.token) return;
+
+    setIsRefreshing(true);
+    try {
+      // Refrescar datos del usuario
+      const response = await getMeRequest(user.token);
+      setUsuarioCompleto(response.user);
+
+      // Refrescar datos según el rol
+      if (response.user.tipo === "WORKER") {
+        await Promise.all([
+          reloadCharlas?.(),
+          reloadDocumentos?.(),
+          reloadLogros?.(),
+        ]);
+      } else {
+        await reloadLogros?.();
+      }
+    } catch (error) {
+      console.error("Error al refrescar datos:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // ── CARGA INICIAL ──
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user?.token) {
@@ -62,6 +100,44 @@ export default function ProfileView() {
     fetchUserData();
   }, [user?.token]);
 
+  // ── AUTO-REFRESH cada 30 segundos (opcional - puedes comentar esto si no lo quieres) ──
+  useEffect(() => {
+    if (!user?.token) return;
+
+    const interval = setInterval(() => {
+      refreshAllData();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [user?.token, reloadCharlas, reloadDocumentos, reloadLogros]);
+
+  // ── ESCUCHAR CAMBIOS EN LocalStorage (cuando otra pestaña actualiza) ──
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === "logros_updated" ||
+        e.key === "charlas_updated" ||
+        e.key === "documentos_updated"
+      ) {
+        refreshAllData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [reloadCharlas, reloadDocumentos, reloadLogros]);
+
+  // ── ESCUCHAR EVENTO CUSTOM DE LOGRO DESBLOQUEADO ──
+  useEffect(() => {
+    const handleLogroDesbloqueado = () => {
+      refreshAllData();
+    };
+
+    window.addEventListener("logro_desbloqueado", handleLogroDesbloqueado);
+    return () =>
+      window.removeEventListener("logro_desbloqueado", handleLogroDesbloqueado);
+  }, [reloadCharlas, reloadDocumentos, reloadLogros]);
+
   const handleLogout = async () => {
     await logout();
   };
@@ -77,8 +153,11 @@ export default function ProfileView() {
   // Calcular estadísticas para workers
   const charlasCompletadas =
     charlasUsuario?.filter((c) => c.estado === "COMPLETADA").length || 0;
-  const totalCharlas = 365;
-  const progresoCharlas = Math.round((charlasCompletadas / totalCharlas) * 100);
+  const totalCharlas = charlasUsuario?.length || 0;
+  const progresoCharlas =
+    totalCharlas > 0
+      ? Math.round((charlasCompletadas / totalCharlas) * 100)
+      : 0;
 
   const documentosVistos =
     documentosUsuario?.filter((d) => d.estado === "VISTO").length || 0;
@@ -88,7 +167,8 @@ export default function ProfileView() {
       ? Math.round((documentosVistos / totalDocumentos) * 100)
       : 0;
 
-  const iniciales = `${usuarioCompleto.nombre.charAt(0)}${usuarioCompleto.apellido.charAt(0)}`.toUpperCase();
+  const iniciales =
+    `${usuarioCompleto.nombre.charAt(0)}${usuarioCompleto.apellido.charAt(0)}`.toUpperCase();
 
   const formatearFecha = (fecha: string) =>
     new Date(fecha).toLocaleDateString("es-PE", {
@@ -108,6 +188,19 @@ export default function ProfileView() {
             <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]" />
             <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-indigo-400 opacity-15 rounded-full blur-[80px]" />
+
+            {/* ── BOTÓN REFRESH ── */}
+            <button
+              onClick={refreshAllData}
+              disabled={isRefreshing}
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+              title="Actualizar datos"
+            >
+              <RefreshCw
+                className={`w-5 h-5 text-white ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </button>
+
             <div className="relative z-10 flex flex-col items-center text-center">
               <ProfileCard
                 initials={iniciales}
@@ -199,7 +292,7 @@ export default function ProfileView() {
                     title="Cumplimiento General"
                     value={`${Math.round((progresoCharlas + progresoDocumentos) / 2)}%`}
                     percentage={Math.round(
-                      (progresoCharlas + progresoDocumentos) / 2
+                      (progresoCharlas + progresoDocumentos) / 2,
                     )}
                     showIcon
                     icon={Award}
@@ -214,6 +307,9 @@ export default function ProfileView() {
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
                     <Trophy className="w-5 h-5 text-amber-500" />
                     Mis Logros
+                    {isRefreshing && (
+                      <RefreshCw className="w-4 h-4 text-gray-400 animate-spin" />
+                    )}
                   </h2>
 
                   {logrosLoading ? (
@@ -275,10 +371,13 @@ export default function ProfileView() {
                             {conseguido && ul.fechaConseguido && (
                               <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" />
-                                {new Date(ul.fechaConseguido).toLocaleDateString(
-                                  "es-PE",
-                                  { day: "numeric", month: "short", year: "numeric" }
-                                )}
+                                {new Date(
+                                  ul.fechaConseguido,
+                                ).toLocaleDateString("es-PE", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
                               </p>
                             )}
 

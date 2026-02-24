@@ -64,6 +64,62 @@ async function listarUsuarios() {
   return usuarioRepository.findAll();
 }
 
+async function listarUsuariosConStats() {
+  // 1. Traer todos los usuarios
+  const usuarios = await usuarioRepository.findAll();
+
+  // 2. Total de charlas en el sistema
+  const totalCharlas = await prisma.charla.count();
+
+  // 3. Para cada usuario, calcular sus stats en paralelo
+  const usuariosConStats = await Promise.all(
+    usuarios.map(async (u) => {
+      if (u.tipo !== "WORKER") {
+        return { ...u, charlasCompletadas: null, totalCharlas: null, examenStatus: "—", cumpl: null };
+      }
+
+      // Charlas completadas
+      const charlasCompletadas = await prisma.progresoCharla.count({
+        where: { idUsuario: u.id, estado: "COMPLETADA" },
+      });
+
+      // Examen: chequear directamente en intentoExamen si hay algún aprobado
+      const ahora = new Date();
+      let examenStatus = "No aprobado";
+
+      // Si está bloqueado actualmente → Bloqueada
+      const bloqueo = await prisma.bloqueoExamen.findUnique({
+        where: { idUsuario: u.id },
+      });
+
+      if (bloqueo && bloqueo.bloqueadoHasta && bloqueo.bloqueadoHasta > ahora) {
+        examenStatus = "Bloqueada";
+      } else {
+        // Verificar directamente si algún intento fue aprobado
+        const intentoAprobado = await prisma.intentoExamen.findFirst({
+          where: { idUsuario: u.id, aprobado: true },
+        });
+        examenStatus = intentoAprobado ? "Aprobado" : "No aprobado";
+      }
+
+      // Cumplimiento: % de charlas completadas del total
+      const cumpl = totalCharlas > 0
+        ? Math.round((charlasCompletadas / totalCharlas) * 100)
+        : 0;
+
+      return {
+        ...u,
+        charlasCompletadas,
+        totalCharlas,
+        examenStatus,
+        cumpl,
+      };
+    })
+  );
+
+  return usuariosConStats;
+}
+
 async function obtenerUsuarioPorId(id) {
   return usuarioRepository.findById(id);
 }
@@ -93,6 +149,7 @@ async function eliminarUsuario(id) {
 module.exports = {
   crearUsuarioConAsignaciones,
   listarUsuarios,
+  listarUsuariosConStats,
   obtenerUsuarioPorId,
   actualizarUsuario,
   desactivarUsuario,

@@ -6,6 +6,7 @@ import KpiComponent from "@/components/kpiComponent";
 import { useAuthContext } from "@/context/AuthContext";
 import { useCharlaAdminContext } from "@/context/CharlaAdminContext";
 import { useNotificacionContext } from "@/context/NotificacionContext";
+import { useLogroContext } from "@/context/LogroContext";
 import {
   BookOpen,
   Bell,
@@ -19,8 +20,9 @@ import {
 
 const DashboardView = () => {
   const { user } = useAuthContext();
-  const { charlasUsuario } = useCharlaAdminContext();
-  const { unreadCount } = useNotificacionContext();
+  const { charlasUsuario, marcarCompletada } = useCharlaAdminContext();
+  const { unreadCount, reload: reloadNotificaciones } = useNotificacionContext();
+  const { reload: reloadLogros } = useLogroContext();
 
   // Fecha de hoy formateada
   const hoy = new Date();
@@ -66,6 +68,29 @@ const DashboardView = () => {
     if (hours < 24) return `Hace ${hours} hora${hours > 1 ? "s" : ""}`;
     if (days === 1) return "Ayer";
     return `Hace ${days} días`;
+  };
+
+  // ── NUEVA FUNCIÓN: Marcar charla del día como completada ──
+  const handleComenzarCharla = async () => {
+    if (!charlaDelDia) return;
+
+    // Abrir el enlace
+    window.open(charlaDelDia.enlace, "_blank");
+
+    // Marcar como completada si no lo está ya
+    if (charlaDelDia.estado !== "COMPLETADA") {
+      try {
+        await marcarCompletada(charlaDelDia.id);
+        // Recargar notificaciones y logros para reflejar cambios
+        await Promise.all([reloadNotificaciones(), reloadLogros()]);
+        
+        // Disparar evento para actualizar otras páginas (como el perfil)
+        window.dispatchEvent(new CustomEvent("logro_desbloqueado"));
+        localStorage.setItem("charlas_updated", Date.now().toString());
+      } catch (err: any) {
+        console.error("Error al marcar charla como completada:", err);
+      }
+    }
   };
 
   return (
@@ -132,19 +157,17 @@ const DashboardView = () => {
               )}
             </div>
             {charlaDelDia ? (
-              <a
-                href={charlaDelDia.enlace}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6 shadow-lg"
+              <button
+                onClick={handleComenzarCharla}
+                className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6 shadow-lg transition-all hover:scale-105"
               >
                 <Play size={18} fill="currentColor" />
                 Comenzar Ahora
-              </a>
+              </button>
             ) : (
               <Link
                 href="/charlas"
-                className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6 shadow-lg"
+                className="bg-cyan-400 hover:bg-cyan-500 text-[#003366] font-bold px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap ml-6 shadow-lg transition-all hover:scale-105"
               >
                 Ver Charlas
               </Link>

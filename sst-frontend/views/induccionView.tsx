@@ -108,12 +108,7 @@ const InduccionView = () => {
                 <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-2 text-black">
                   Inducción a diversos temas
                 </h2>
-                <div className="flex items-center justify-center gap-4 mt-3">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500 bg-opacity-20 text-sm">
-                    <Clock className="w-4 h-4" />
-                    10 minutos
-                  </span>
-                </div>
+
               </div>
               {/* Video embebido con mejor estilo */}
               {embedUrl && (
@@ -140,7 +135,7 @@ const InduccionView = () => {
                   Seguridad
                 </span>
                 <span className="px-4 py-2 rounded-full bg-gray-50 text-gray-700 text-sm font-medium">
-                  Nivel: Básico
+                  Inducción
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 text-sm text-gray-600">
@@ -148,34 +143,35 @@ const InduccionView = () => {
                 <span className="font-medium">{induccion.duracion} min</span>
               </div>
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Uso Correcto de EPP en Altura
-              </h3>
-              <p className="text-gray-700 leading-relaxed text-base">
-                Los trabajos en altura representan uno de los principales riesgos en
-                la industria de la construcción y mantenimiento. El uso correcto del
-                Equipo de Protección Personal (EPP) puede prevenir accidentes graves
-                e incluso fatales. En esta charla aprenderás cómo seleccionar,
-                ajustar y verificar tu arnés de cuerpo completo, así como las
-                inspecciones previas y posteriores al uso.
-              </p>
-            </div>
-            {/* Puntos clave */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>Selección de EPP</span>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Inducción General QHSE - ITELSAC
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-base">
+                  Bienvenido a ITELSAC, empresa líder en servicios de telecomunicaciones y 
+                  construcción de redes de fibra óptica en el Perú. Esta inducción cubre los 
+                  aspectos fundamentales de nuestra Política Integrada de Gestión en Calidad, 
+                  Seguridad, Salud Ocupacional y Medio Ambiente (QHSE). Aprenderás sobre 
+                  trabajos de alto riesgo, manejo de materiales peligrosos, gestión de residuos, 
+                  primeros auxilios, y las normas generales de seguridad que todo colaborador 
+                  debe conocer y aplicar en campo.
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>Inspección previa</span>
+              {/* Puntos clave */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span>Trabajos de alto riesgo</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span>EPP y PETAR</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span>Gestión de residuos</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>Uso correcto</span>
-              </div>
-            </div>
           </div>
 
           {/* Botones para diapositivas y PDF mejorados */}

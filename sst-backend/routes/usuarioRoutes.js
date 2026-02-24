@@ -9,6 +9,7 @@ const router = express.Router();
 
 // Solo ADMIN puede gestionar usuarios
 router.get("/", authMiddleware, adminOnly, usuarioController.listarUsuarios);
+router.get("/stats", authMiddleware, adminOnly, usuarioController.listarUsuariosConStats);
 router.get("/:id", authMiddleware, adminOnly, usuarioController.obtenerUsuario);
 router.post("/", authMiddleware, adminOnly, usuarioController.crearUsuario);
 router.put("/:id", authMiddleware, adminOnly, usuarioController.actualizarUsuario);

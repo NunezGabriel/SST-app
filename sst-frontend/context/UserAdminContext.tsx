@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import {
-  getUsersRequest,
+  getUsersWithStatsRequest,
   createUserRequest,
   updateUserRequest,
   activateUserRequest,
@@ -62,9 +62,13 @@ export const UserAdminProvider = ({ children }: { children: ReactNode }) => {
     correo: u.correo,
     tipo: u.tipo,
     activo: u.activo,
-    charlas: u.tipo === "WORKER" ? "0/0" : "—",
-    examen: u.tipo === "WORKER" ? "No rendido" : "—",
-    cumpl: 0,
+    // Stats reales del backend
+    charlas:
+      u.tipo === "WORKER"
+        ? `${u.charlasCompletadas ?? 0}/${u.totalCharlas ?? 0}`
+        : "—",
+    examen: u.examenStatus ?? (u.tipo === "WORKER" ? "No rendido" : "—"),
+    cumpl: u.tipo === "WORKER" ? (u.cumpl ?? 0) : 0,
   });
 
   const load = useCallback(async () => {
@@ -72,7 +76,7 @@ export const UserAdminProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getUsersRequest(user.token);
+      const data = await getUsersWithStatsRequest(user.token);
       setUsuarios(data.map(mapUsuario));
     } catch (err: any) {
       console.error(err);

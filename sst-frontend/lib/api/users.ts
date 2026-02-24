@@ -13,6 +13,13 @@ export interface UsuarioApi {
   activo: boolean;
 }
 
+export interface UsuarioApiConStats extends UsuarioApi {
+  charlasCompletadas: number | null;
+  totalCharlas: number | null;
+  examenStatus: string;
+  cumpl: number | null;
+}
+
 const getAuthHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,
 });
@@ -29,6 +36,21 @@ export const getUsersRequest = async (token: string): Promise<UsuarioApi[]> => {
       throw new Error(message || "Error al obtener usuarios.");
     }
     throw new Error("Error al obtener usuarios.");
+  }
+};
+
+export const getUsersWithStatsRequest = async (token: string): Promise<UsuarioApiConStats[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/api/usuarios/stats`, {
+      headers: getAuthHeaders(token),
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const message = error.response.data?.message || error.response.data?.error;
+      throw new Error(message || "Error al obtener stats de usuarios.");
+    }
+    throw new Error("Error al obtener stats de usuarios.");
   }
 };
 

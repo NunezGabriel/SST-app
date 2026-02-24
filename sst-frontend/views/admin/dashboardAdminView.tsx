@@ -8,21 +8,16 @@ import { useUserAdminContext } from "@/context/UserAdminContext";
 import { useDocumentoAdminContext } from "@/context/DocumentoAdminContext";
 import { useExamenAdminContext } from "@/context/ExamenAdminContext";
 import { useFormatoAdminContext } from "@/context/FormatoAdminContext";
-import { useNotificacionContext } from "@/context/NotificacionContext";
 import {
   Users,
   BookOpen,
-  Bell,
   FileText,
-  CheckCircle2,
   AlertCircle,
-  Clock,
   Shield,
   ClipboardList,
-  Award,
   ChevronRight,
-  UserCheck,
-  UserX,
+  BarChart2,
+  Bell
 } from "lucide-react";
 
 const DasboardAdminView = () => {
@@ -32,7 +27,6 @@ const DasboardAdminView = () => {
   const { documentos } = useDocumentoAdminContext();
   const { preguntas } = useExamenAdminContext();
   const { formatos } = useFormatoAdminContext();
-  const { notificaciones } = useNotificacionContext();
 
   // Fecha formateada
   const hoy = new Date();
@@ -66,25 +60,10 @@ const DasboardAdminView = () => {
     (w) => w.examen === "Bloqueada"
   ).length;
 
-  // Actividad reciente: últimas 5 notificaciones
-  const recentActivity = [...notificaciones]
-    .sort(
-      (a, b) =>
-        new Date(b.fechaCreacion ?? "").getTime() -
-        new Date(a.fechaCreacion ?? "").getTime()
-    )
-    .slice(0, 5);
-
-  const formatRelativeTime = (isoDate?: string) => {
-    if (!isoDate) return "";
-    const diff = Date.now() - new Date(isoDate).getTime();
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (hours < 1) return "Hace menos de 1 hora";
-    if (hours < 24) return `Hace ${hours} hora${hours > 1 ? "s" : ""}`;
-    if (days === 1) return "Ayer";
-    return `Hace ${days} días`;
-  };
+  // Distribución de exámenes
+  const examenAprobados  = workers.filter((w) => w.examen === "Aprobado").length;
+  const examenNoAprobado = workers.filter((w) => w.examen === "No aprobado").length;
+  const examenMaxVal     = Math.max(examenAprobados, examenNoAprobado, examenBloqueados, 1);
 
   // Tabla: primeros 4 workers
   const workerStats = workers.slice(0, 4);
@@ -253,43 +232,52 @@ const DasboardAdminView = () => {
             </div>
           </div>
 
-          {/* Actividad Reciente */}
+          {/* Distribución de Exámenes */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Clock size={20} className="text-[#003366]" />
-              Actividad Reciente
+              <BarChart2 size={20} className="text-[#003366]" />
+              Distribución de Exámenes
             </h3>
-            <div className="space-y-4">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((notif) => (
-                  <div key={notif.id} className="flex items-start gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center mt-0.5 shrink-0 ${
-                        notif.leida
-                          ? "bg-gray-100 text-gray-400"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      {notif.leida ? (
-                        <CheckCircle2 size={15} />
-                      ) : (
-                        <Bell size={15} />
-                      )}
+            {workers.length === 0 ? (
+              <p className="text-sm text-gray-400">No hay workers registrados</p>
+            ) : (
+              <div className="space-y-5">
+                {[
+                  { label: "Aprobado",    count: examenAprobados,  color: "from-green-400 to-green-500",   badge: "bg-green-100 text-green-700"  },
+                  { label: "No aprobado", count: examenNoAprobado, color: "from-yellow-400 to-yellow-500", badge: "bg-yellow-100 text-yellow-700" },
+                  { label: "Bloqueada",   count: examenBloqueados, color: "from-red-400 to-red-500",       badge: "bg-red-100 text-red-700"      },
+                ].map(({ label, count, color, badge }) => (
+                  <div key={label}>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{label}</span>
+                      <span className="text-sm font-bold text-gray-800">{count} <span className="text-gray-400 font-normal">/ {workers.length}</span></span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm leading-snug">
-                        {notif.nombre}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatRelativeTime(notif.fechaCreacion)}
-                      </p>
+                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${color} rounded-full transition-all duration-700`}
+                        style={{ width: `${examenMaxVal > 0 ? (count / examenMaxVal) * 100 : 0}%` }}
+                      />
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-400">Sin actividad reciente</p>
-              )}
-            </div>
+                ))}
+
+                {/* Resumen numérico */}
+                <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xl font-bold text-green-600">{examenAprobados}</p>
+                    <p className="text-xs text-gray-400">Aprobaron</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-yellow-500">{examenNoAprobado}</p>
+                    <p className="text-xs text-gray-400">No aprobaron</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-red-500">{examenBloqueados}</p>
+                    <p className="text-xs text-gray-400">Bloqueados</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Estado del Sistema */}
@@ -373,7 +361,9 @@ const DasboardAdminView = () => {
                               ? "bg-green-100 text-green-700"
                               : w.examen === "Bloqueada"
                                 ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-500"
+                                : w.examen === "No aprobado"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-500"
                           }`}
                         >
                           {w.examen}

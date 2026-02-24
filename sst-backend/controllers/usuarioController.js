@@ -36,6 +36,16 @@ async function listarUsuarios(req, res) {
   }
 }
 
+async function listarUsuariosConStats(req, res) {
+  try {
+    const usuarios = await usuarioService.listarUsuariosConStats();
+    res.json(usuarios);
+  } catch (error) {
+    console.error("Error al listar usuarios con stats:", error);
+    res.status(500).json({ error: "Error al listar usuarios con stats" });
+  }
+}
+
 async function obtenerUsuario(req, res) {
   try {
     const id = Number(req.params.id);
@@ -102,6 +112,7 @@ async function eliminarUsuario(req, res) {
 module.exports = {
   crearUsuario,
   listarUsuarios,
+  listarUsuariosConStats,
   obtenerUsuario,
   actualizarUsuario,
   desactivarUsuario,

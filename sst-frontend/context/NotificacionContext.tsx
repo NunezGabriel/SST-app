@@ -9,6 +9,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   getNotificacionesRequest,
@@ -33,14 +34,10 @@ interface NotificacionContextType {
 }
 
 const NotificacionContext = createContext<NotificacionContextType | undefined>(
-  undefined
+  undefined,
 );
 
-export const NotificacionProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const NotificacionProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuthContext();
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,10 +56,13 @@ export const NotificacionProvider = ({
         // Detectar nuevas notificaciones para mostrar toast
         if (showNewToasts && !isFirstLoadRef.current) {
           const newOnes = data.filter(
-            (n) => !prevIdsRef.current.has(n.id) && !n.leida
+            (n) => !prevIdsRef.current.has(n.id) && !n.leida,
           );
           newOnes.forEach((n) => {
-            setToasts((prev) => [...prev, { id: Date.now() + n.id, notificacion: n }]);
+            setToasts((prev) => [
+              ...prev,
+              { id: Date.now() + n.id, notificacion: n },
+            ]);
           });
         }
 
@@ -77,7 +77,7 @@ export const NotificacionProvider = ({
         // Silenciar errores de polling
       }
     },
-    [user?.token]
+    [user?.token],
   );
 
   // Carga inicial
@@ -113,14 +113,14 @@ export const NotificacionProvider = ({
           prev.map((n) =>
             n.id === id
               ? { ...n, leida: true, fechaLectura: new Date().toISOString() }
-              : n
-          )
+              : n,
+          ),
         );
       } catch (error) {
         console.error("Error al marcar notificación:", error);
       }
     },
-    [user?.token]
+    [user?.token],
   );
 
   const marcarTodasLeidas = useCallback(async () => {
@@ -132,7 +132,7 @@ export const NotificacionProvider = ({
           ...n,
           leida: true,
           fechaLectura: new Date().toISOString(),
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error al marcar todas como leídas:", error);
@@ -162,18 +162,25 @@ export const NotificacionProvider = ({
     >
       {children}
 
-      {/* Cola de toasts globales */}
+      {/* Cola de toasts globales con AnimatePresence */}
       <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
-        {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto">
-            <ToastNotification
-              type={t.notificacion.tipo.toLowerCase() as "logro" | "nuevo" | "pendiente"}
-              title={t.notificacion.nombre}
-              message={t.notificacion.descripcion}
-              onClose={() => dismissToast(t.id)}
-            />
-          </div>
-        ))}
+        <AnimatePresence mode="popLayout">
+          {toasts.map((t) => (
+            <motion.div key={t.id} layout className="pointer-events-auto">
+              <ToastNotification
+                type={
+                  t.notificacion.tipo.toLowerCase() as
+                    | "logro"
+                    | "nuevo"
+                    | "pendiente"
+                }
+                title={t.notificacion.nombre}
+                message={t.notificacion.descripcion}
+                onClose={() => dismissToast(t.id)}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </NotificacionContext.Provider>
   );
@@ -183,7 +190,7 @@ export const useNotificacionContext = () => {
   const context = useContext(NotificacionContext);
   if (!context)
     throw new Error(
-      "useNotificacionContext debe usarse dentro de NotificacionProvider"
+      "useNotificacionContext debe usarse dentro de NotificacionProvider",
     );
   return context;
 };

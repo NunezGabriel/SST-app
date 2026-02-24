@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // ← IMPORTAR usePathname
 import {
   Home,
   BookOpen,
@@ -32,6 +33,7 @@ interface MenuItem {
 const SideBar = () => {
   const { user } = useAuthContext();
   const { unreadCount } = useNotificacionContext();
+  const pathname = usePathname(); // ← OBTENER RUTA ACTUAL
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -89,6 +91,11 @@ const SideBar = () => {
       ? [...baseItems, ...adminOnlyItems, perfilItem]
       : [...baseItems, ...workerOnlyItems, perfilItem];
 
+  // ← FUNCIÓN PARA VERIFICAR SI LA RUTA ESTÁ ACTIVA
+  const isActive = (href: string) => {
+    return pathname === href || pathname?.startsWith(href + "/");
+  };
+
   return (
     <>
       <button
@@ -115,16 +122,11 @@ const SideBar = () => {
         <div className={`p-6 ${!isExpanded && "lg:p-4"}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-              <Image
-                src="/sst-icon.png"
-                alt="SST Logo"
-                width={50}
-                height={50}
-              />
+              <Image src="/icon.png" alt="HSE Logo" width={50} height={50} />
             </div>
             {(isExpanded || isMobile) && (
               <div>
-                <h1 className="font-bold text-lg">SST App</h1>
+                <h1 className="font-bold text-lg">HSE App</h1>
                 <p className="text-xs text-blue-200">Seguridad y Salud</p>
               </div>
             )}
@@ -153,6 +155,8 @@ const SideBar = () => {
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href); // ← VERIFICAR SI ESTÁ ACTIVO
+
               return (
                 <li key={item.href}>
                   {/* Separador visual antes de sección admin */}
@@ -166,8 +170,12 @@ const SideBar = () => {
                     onClick={() => {
                       if (isMobile) setIsOpen(false);
                     }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#1a4876] transition duration-200 group relative ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition duration-200 group relative ${
                       !isExpanded && "lg:justify-center lg:px-2"
+                    } ${
+                      active
+                        ? "bg-[#00d3f2] text-[#003366] font-semibold shadow-lg" // ← ESTILO ACTIVO
+                        : "hover:bg-[#1a4876]" // ← ESTILO HOVER
                     }`}
                     title={!isExpanded ? item.label : ""}
                   >
@@ -184,7 +192,9 @@ const SideBar = () => {
                     </div>
                     {(isExpanded || isMobile) && (
                       <>
-                        <span className="font-medium text-sm flex-1">
+                        <span
+                          className={`text-sm flex-1 ${active ? "font-bold" : "font-medium"}`}
+                        >
                           {item.label}
                         </span>
                         {"badge" in item && item.badge !== undefined && (
@@ -202,7 +212,7 @@ const SideBar = () => {
         </nav>
 
         <div className="p-4 border-t border-blue-800">
-          <p className="text-xs text-blue-300 text-center">© 2026 SST App</p>
+          <p className="text-xs text-blue-300 text-center">© 2026 HSE App</p>
         </div>
       </div>
     </>

@@ -137,7 +137,7 @@ const LoginView = () => {
         </form>
 
         <p className="text-gray-400 text-xs mt-8 text-center">
-          © 2026 SST App - Todos los derechos reservados
+          © 2026 HSE App - Todos los derechos reservados
         </p>
       </div>
     </div>

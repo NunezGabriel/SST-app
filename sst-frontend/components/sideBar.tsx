@@ -126,7 +126,7 @@ const SideBar = () => {
             </div>
             {(isExpanded || isMobile) && (
               <div>
-                <h1 className="font-bold text-lg">SST App</h1>
+                <h1 className="font-bold text-lg">HSE App</h1>
                 <p className="text-xs text-blue-200">Seguridad y Salud</p>
               </div>
             )}
@@ -212,7 +212,7 @@ const SideBar = () => {
         </nav>
 
         <div className="p-4 border-t border-blue-800">
-          <p className="text-xs text-blue-300 text-center">© 2026 SST App</p>
+          <p className="text-xs text-blue-300 text-center">© 2026 HSE App</p>
         </div>
       </div>
     </>

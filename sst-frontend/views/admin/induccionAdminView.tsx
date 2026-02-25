@@ -42,7 +42,8 @@ const toEmbedUrl = (url: string): string | null => {
 
 const InduccionAdminView = () => {
   const router = useRouter();
-  const { induccion, isLoading, error, updateInduccion } = useInduccionAdminContext();
+  const { induccion, isLoading, error, updateInduccion } =
+    useInduccionAdminContext();
   const [form, setForm] = useState({
     youtubeUrl: "",
     enlacePdf: "",
@@ -69,7 +70,9 @@ const InduccionAdminView = () => {
   if (isLoading) {
     return (
       <LayoutComponent>
-        <div className="text-center py-12">Cargando material de inducción...</div>
+        <div className="text-center py-12">
+          Cargando material de inducción...
+        </div>
       </LayoutComponent>
     );
   }
@@ -101,7 +104,7 @@ const InduccionAdminView = () => {
       await updateInduccion({
         linkVideo: form.youtubeUrl,
         linkPdf: form.enlacePdf,
-        linkDiapo: form.enlaceDiapositivas,
+        linkDiapo: "https://drive.google.com",
         duracion: form.duracion,
       });
       setSaved(true);
@@ -217,29 +220,6 @@ const InduccionAdminView = () => {
             </div>
           </div>
 
-          {/* Diapositivas */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Enlace Diapositivas (Drive){" "}
-              <span className="text-red-400">*</span>
-            </label>
-            <div className="relative">
-              <Presentation
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="url"
-                name="enlaceDiapositivas"
-                value={form.enlaceDiapositivas}
-                onChange={handleChange}
-                required
-                placeholder="https://drive.google.com/..."
-                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
-              />
-            </div>
-          </div>
-
           {/* Duración */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -284,27 +264,7 @@ const InduccionAdminView = () => {
           </p>
 
           {/* Links PDF y Diapositivas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a
-              href={form.enlaceDiapositivas}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white rounded-2xl border-2 border-gray-200 hover:border-cyan-300 px-6 py-5 transition-all shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center">
-                <Presentation className="w-6 h-6 text-cyan-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-sm">
-                  Ver Diapositivas
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {form.enlaceDiapositivas}
-                </p>
-              </div>
-              <ExternalLink className="w-4 h-4 text-gray-400 shrink-0" />
-            </a>
-
+          <div className="grid grid-cols-1 gap-4">
             <a
               href={form.enlacePdf}
               target="_blank"
@@ -315,9 +275,7 @@ const InduccionAdminView = () => {
                 <Download className="w-6 h-6 text-cyan-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-sm">
-                  Ver Documento PDF
-                </p>
+                <p className="font-bold text-gray-900 text-sm">Descargar PDF</p>
                 <p className="text-xs text-gray-400 truncate">
                   {form.enlacePdf}
                 </p>

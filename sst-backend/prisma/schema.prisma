@@ -291,3 +291,16 @@ enum TipoNotificacion {
   PENDIENTE
 }
 
+// ============================================
+// MODELO RECUPERACIÓN DE CONTRASEÑA
+// ============================================
+model PasswordReset {
+  id         Int      @id @default(autoincrement())
+  correo     String   @db.VarChar(150)
+  codigo     String   // El código de 6 dígitos o UUID
+  expira     DateTime
+  utilizado  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("fecha_creacion")
+
+  @@map("password_reset")
+}

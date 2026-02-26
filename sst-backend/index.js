@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const passwordResetRoutes = require("./routes/passwordResetRoutes");
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const charlaRoutes = require("./routes/charlaRoutes");
 const documentoRoutes = require("./routes/documentoRoutes");
@@ -20,7 +21,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 app.use(express.text());
@@ -35,6 +36,9 @@ app.get("/api/conection", (req, res) => {
 
 // Rutas de autenticación
 app.use("/api/auth", authRoutes);
+
+// Rutas de recuperación de contraseña
+app.use("/api/password-reset", passwordResetRoutes);
 
 // Rutas de administración de usuarios
 app.use("/api/usuarios", usuarioRoutes);
@@ -60,7 +64,6 @@ app.use("/api/induccion", induccionRoutes);
 // Rutas de examen
 app.use("/api/examen", examenRoutes);
 
-
 // Middleware 404 (debe ir al final)
 app.use((req, res) => {
   res.status(404).send("Page not found -- Desde Express. (0_0)");
@@ -71,4 +74,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

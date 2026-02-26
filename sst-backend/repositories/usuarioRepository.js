@@ -51,6 +51,13 @@ function destroy(id) {
   });
 }
 
+function updatePassword(correo, hashedPassword) {
+  return prisma.usuario.update({
+    where: { correo },
+    data: { contrasena: hashedPassword },
+  });
+}
+
 module.exports = {
   findById,
   findByCorreo,
@@ -60,5 +67,5 @@ module.exports = {
   deactivate,
   activate,
   destroy,
+  updatePassword,
 };
-

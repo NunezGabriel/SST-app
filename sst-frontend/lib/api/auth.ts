@@ -15,7 +15,7 @@ export interface LoginResponse {
 // ✅ Login
 export const loginRequest = async (
   correo: string,
-  contrasena: string
+  contrasena: string,
 ): Promise<LoginResponse> => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, {
@@ -31,7 +31,7 @@ export const loginRequest = async (
 
       if (status === 401) {
         throw new Error(
-          "Credenciales incorrectas. Verifica tu correo y contraseña."
+          "Credenciales incorrectas. Verifica tu correo y contraseña.",
         );
       } else if (status === 404) {
         throw new Error("Usuario no encontrado.");
@@ -42,7 +42,7 @@ export const loginRequest = async (
       }
     } else if (error.request) {
       throw new Error(
-        "No se pudo conectar con el servidor. Verifica tu conexión."
+        "No se pudo conectar con el servidor. Verifica tu conexión.",
       );
     } else {
       throw new Error("Error inesperado. Intenta de nuevo.");
@@ -92,7 +92,7 @@ export const getMeRequest = async (token: string): Promise<MeResponse> => {
 export const changePasswordRequest = async (
   token: string,
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<void> => {
   try {
     await axios.put(
@@ -105,11 +105,12 @@ export const changePasswordRequest = async (
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
   } catch (error: any) {
     if (error.response) {
-      const message = error.response.data?.message || error.response.data?.error;
+      const message =
+        error.response.data?.message || error.response.data?.error;
       throw new Error(message || "Error al cambiar la contraseña.");
     }
     throw new Error("Error al cambiar la contraseña.");
@@ -126,10 +127,99 @@ export const logoutRequest = async (token: string): Promise<void> => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
   } catch (error: any) {
     // Incluso si falla el request, el logout del cliente debe continuar
     console.error("Error al cerrar sesión en el servidor:", error);
+  }
+};
+
+// ✅ Solicitar recuperación de contraseña
+export const solicitarRecuperacionRequest = async (
+  correo: string,
+): Promise<{ message: string }> => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8080/api/password-reset/solicitar`,
+      {
+        correo,
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const message =
+        error.response.data?.message || error.response.data?.error;
+      throw new Error(
+        message || "Error al solicitar recuperación de contraseña.",
+      );
+    } else if (error.request) {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica tu conexión.",
+      );
+    } else {
+      throw new Error("Error inesperado. Intenta de nuevo.");
+    }
+  }
+};
+
+// ✅ Validar código de recuperación
+export const validarCodigoRequest = async (
+  correo: string,
+  codigo: string,
+): Promise<{ valid: boolean; message: string }> => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8080/api/password-reset/validar`,
+      {
+        correo,
+        codigo,
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const message =
+        error.response.data?.message || error.response.data?.error;
+      throw new Error(message || "Error al validar el código.");
+    } else if (error.request) {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica tu conexión.",
+      );
+    } else {
+      throw new Error("Error inesperado. Intenta de nuevo.");
+    }
+  }
+};
+
+// ✅ Restablecer contraseña
+export const resetPasswordRequest = async (
+  correo: string,
+  codigo: string,
+  nuevaContrasena: string,
+): Promise<{ message: string }> => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8080/api/password-reset/resetear`,
+      {
+        correo,
+        codigo,
+        nuevaContrasena,
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const message =
+        error.response.data?.message || error.response.data?.error;
+      throw new Error(message || "Error al restablecer la contraseña.");
+    } else if (error.request) {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica tu conexión.",
+      );
+    } else {
+      throw new Error("Error inesperado. Intenta de nuevo.");
+    }
   }
 };

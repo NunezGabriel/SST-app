@@ -7,7 +7,14 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { loginRequest, changePasswordRequest, logoutRequest } from "@/lib/api/auth";
+import {
+  loginRequest,
+  changePasswordRequest,
+  logoutRequest,
+  solicitarRecuperacionRequest,
+  validarCodigoRequest,
+  resetPasswordRequest,
+} from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -25,8 +32,18 @@ interface AuthContextType {
   logout: () => void;
   changePassword: (
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<void>;
+  solicitarRecuperacion: (correo: string) => Promise<{ message: string }>;
+  validarCodigo: (
+    correo: string,
+    codigo: string,
+  ) => Promise<{ valid: boolean; message: string }>;
+  resetPassword: (
+    correo: string,
+    codigo: string,
+    nuevaContrasena: string,
+  ) => Promise<{ message: string }>;
   isLoading: boolean;
 }
 
@@ -65,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (correo: string, contrasena: string) => {
     try {
       const { token, usuario } = await loginRequest(correo, contrasena);
-      
+
       const newUser: User = {
         id: usuario.id,
         nombre: usuario.nombre,
@@ -101,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const changePassword = async (
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ) => {
     if (!user) throw new Error("No hay usuario autenticado");
     try {
@@ -112,9 +129,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const solicitarRecuperacion = async (correo: string) => {
+    try {
+      return await solicitarRecuperacionRequest(correo);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const validarCodigo = async (correo: string, codigo: string) => {
+    try {
+      return await validarCodigoRequest(correo, codigo);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const resetPassword = async (
+    correo: string,
+    codigo: string,
+    nuevaContrasena: string,
+  ) => {
+    try {
+      return await resetPasswordRequest(correo, codigo, nuevaContrasena);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, changePassword, isLoading }}
+      value={{
+        user,
+        login,
+        logout,
+        changePassword,
+        solicitarRecuperacion,
+        validarCodigo,
+        resetPassword,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -235,10 +235,10 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     className="w-full pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none"
                   >
                     <option value="TRUJILLO">Trujillo</option>
-                    <option value="LIMA">Lima</option>
-                    <option value="AREQUIPA">Arequipa</option>
+                    <option value="CHIMBOTE">Chimbote</option>
+                    <option value="JAEN">Jaén</option>
                     <option value="CHICLAYO">Chiclayo</option>
-                    <option value="PIURA">Piura</option>
+                    <option value="HUANCABAMBA">Huancabamba</option>
                   </select>
                 </div>
               </div>

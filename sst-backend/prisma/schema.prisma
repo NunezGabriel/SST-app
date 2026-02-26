@@ -18,6 +18,8 @@ model Usuario {
   contrasena           String                 @db.VarChar(255)
   tipo                 TipoUsuario            @default(WORKER)
   activo               Boolean                @default(true)
+  telefono            String?                @db.VarChar(20) 
+  sede                String                 @default("TRUJILLO") @db.VarChar(100)
   fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
   fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
   

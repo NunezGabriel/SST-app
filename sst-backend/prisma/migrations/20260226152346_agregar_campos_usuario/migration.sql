@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "usuario" ADD COLUMN     "sede" VARCHAR(100) NOT NULL DEFAULT 'TRUJILLO',
+ADD COLUMN     "telefono" VARCHAR(20);

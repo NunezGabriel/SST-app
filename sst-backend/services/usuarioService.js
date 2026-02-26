@@ -14,6 +14,8 @@ async function crearUsuarioConAsignaciones(data) {
         correo: data.correo,
         contrasena: hashedPassword,
         tipo: data.tipo || "WORKER",
+        telefono: data.telefono || null,
+        sede: data.sede || "TRUJILLO",
       },
     });
 

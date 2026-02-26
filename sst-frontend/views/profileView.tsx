@@ -26,6 +26,8 @@ import {
   Star,
   BadgeCheck,
   RefreshCw,
+  Phone,
+  MapPin,
 } from "lucide-react";
 
 // Mapeo icono backend → componente lucide
@@ -254,6 +256,26 @@ export default function ProfileView() {
                     <p className="text-xs text-gray-500">Fecha de Registro</p>
                     <p className="text-sm font-semibold text-gray-900">
                       {formatearFecha(usuarioCompleto.fechaCreacion)}
+                    </p>
+                  </div>
+                </div>
+                {usuarioCompleto.telefono && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-xs text-gray-500">Teléfono</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {usuarioCompleto.telefono}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-xs text-gray-500">Sede</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {usuarioCompleto.sede}
                     </p>
                   </div>
                 </div>

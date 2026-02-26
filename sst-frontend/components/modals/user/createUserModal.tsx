@@ -9,6 +9,8 @@ import {
   CreditCard,
   PlusCircle,
   ChevronDown,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import {
   TipoUsuario,
@@ -28,6 +30,8 @@ const emptyForm: UserFormData = {
   correo: "",
   contrasena: "",
   tipo: "WORKER",
+  telefono: "",
+  sede: "TRUJILLO",
 };
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({
@@ -185,6 +189,58 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   placeholder="••••••••"
                   className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
                 />
+              </div>
+            </div>
+
+            {/* Teléfono + Sede */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Teléfono
+                </label>
+                <div className="relative">
+                  <Phone
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    name="telefono"
+                    value={form.telefono ?? ""}
+                    onChange={handleChange}
+                    maxLength={20}
+                    placeholder="+51 999 999 999"
+                    className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 placeholder-gray-300"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Sede <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <ChevronDown
+                    size={15}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  />
+                  <select
+                    name="sede"
+                    value={form.sede}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none"
+                  >
+                    <option value="TRUJILLO">Trujillo</option>
+                    <option value="LIMA">Lima</option>
+                    <option value="AREQUIPA">Arequipa</option>
+                    <option value="CHICLAYO">Chiclayo</option>
+                    <option value="PIURA">Piura</option>
+                  </select>
+                </div>
               </div>
             </div>
 

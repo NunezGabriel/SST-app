@@ -11,6 +11,8 @@ export interface UsuarioApi {
   correo: string;
   tipo: TipoUsuario;
   activo: boolean;
+  telefono?: string | null;
+  sede: string;
 }
 
 export interface UsuarioApiConStats extends UsuarioApi {
@@ -66,6 +68,8 @@ export const createUserRequest = async (
       correo: data.correo,
       tipo: data.tipo,
       contrasena: data.contrasena,
+      telefono: data.telefono || null,
+      sede: data.sede || "TRUJILLO",
     };
 
     const response = await axios.post(`${API_URL}/api/usuarios`, payload, {
@@ -93,6 +97,8 @@ export const updateUserRequest = async (
       dni: data.dni,
       correo: data.correo,
       tipo: data.tipo,
+      telefono: data.telefono || null,
+      sede: data.sede || "TRUJILLO",
     };
 
     if (data.contrasena) {

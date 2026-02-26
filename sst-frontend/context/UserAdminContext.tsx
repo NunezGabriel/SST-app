@@ -27,7 +27,9 @@ export interface Usuario {
   correo: string;
   tipo: TipoUsuario;
   activo: boolean;
-  // Campos solo para la UI (placeholder por ahora)
+  telefono?: string | null;
+  sede: string;
+  // Campos solo para la UI
   charlas: string;
   examen: string;
   cumpl: number;
@@ -62,6 +64,8 @@ export const UserAdminProvider = ({ children }: { children: ReactNode }) => {
     correo: u.correo,
     tipo: u.tipo,
     activo: u.activo,
+    telefono: u.telefono ?? null,
+    sede: u.sede ?? "TRUJILLO",
     // Stats reales del backend
     charlas:
       u.tipo === "WORKER"
@@ -117,6 +121,8 @@ export const UserAdminProvider = ({ children }: { children: ReactNode }) => {
                 dni: actualizado.dni,
                 correo: actualizado.correo,
                 tipo: actualizado.tipo,
+                telefono: actualizado.telefono ?? null,
+                sede: actualizado.sede ?? "TRUJILLO",
               }
             : u
         )

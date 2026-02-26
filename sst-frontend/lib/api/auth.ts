@@ -60,6 +60,8 @@ export interface UsuarioCompleto {
   activo: boolean;
   fechaCreacion: string;
   fechaActualizacion: string;
+  telefono?: string | null;
+  sede: string;
 }
 
 export interface MeResponse {

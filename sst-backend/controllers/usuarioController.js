@@ -2,7 +2,7 @@ const usuarioService = require("../services/usuarioService");
 
 async function crearUsuario(req, res) {
   try {
-    const { nombre, apellido, dni, correo, contrasena, tipo } = req.body;
+    const { nombre, apellido, dni, correo, contrasena, tipo, telefono, sede } = req.body;
 
     if (!nombre || !apellido || !dni || !correo || !contrasena) {
       return res
@@ -17,6 +17,8 @@ async function crearUsuario(req, res) {
       correo,
       contrasena,
       tipo,
+      telefono,
+      sede,
     });
 
     res.status(201).json(nuevoUsuario);

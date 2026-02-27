@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // ← IMPORTAR usePathname
+import { usePathname } from "next/navigation";
 import {
   Home,
   BookOpen,
@@ -16,8 +16,8 @@ import {
   ArrowRightToLine,
   FileSpreadsheet,
   Shield,
-  Users,
   UserRoundCog,
+  ClipboardList,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useNotificacionContext } from "@/context/NotificacionContext";
@@ -33,7 +33,7 @@ interface MenuItem {
 const SideBar = () => {
   const { user } = useAuthContext();
   const { unreadCount } = useNotificacionContext();
-  const pathname = usePathname(); // ← OBTENER RUTA ACTUAL
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -45,7 +45,6 @@ const SideBar = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Si no hay usuario, no mostrar el sidebar
   if (!user) return null;
 
   const userRole = user.rol as "WORKER" | "ADMIN";
@@ -64,9 +63,9 @@ const SideBar = () => {
       href: "/formatos",
     },
     { icon: Shield, label: "Induccion", href: "/induccion" },
+    { icon: ClipboardList, label: "Registro", href: "/registro" },
   ];
 
-  // Solo visible para workers
   const workerOnlyItems: MenuItem[] = [
     { icon: Bell, label: "Alertas", href: "/alertas", badge: unreadCount },
   ];
@@ -91,10 +90,8 @@ const SideBar = () => {
       ? [...baseItems, ...adminOnlyItems, perfilItem]
       : [...baseItems, ...workerOnlyItems, perfilItem];
 
-  // ← FUNCIÓN PARA VERIFICAR SI LA RUTA ESTÁ ACTIVA
-  const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(href + "/");
-  };
+  const isActive = (href: string) =>
+    pathname === href || pathname?.startsWith(href + "/");
 
   return (
     <>
@@ -155,14 +152,15 @@ const SideBar = () => {
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.href); // ← VERIFICAR SI ESTÁ ACTIVO
+              const active = isActive(item.href);
 
               return (
                 <li key={item.href}>
-                  {/* Separador visual antes de sección admin */}
                   {"isAdminSection" in item && item.isAdminSection && (
                     <div
-                      className={`border-t border-blue-800 mb-2 mt-2 ${!isExpanded && !isMobile ? "mx-2" : "mx-0"}`}
+                      className={`border-t border-blue-800 mb-2 mt-2 ${
+                        !isExpanded && !isMobile ? "mx-2" : "mx-0"
+                      }`}
                     />
                   )}
                   <Link
@@ -174,8 +172,8 @@ const SideBar = () => {
                       !isExpanded && "lg:justify-center lg:px-2"
                     } ${
                       active
-                        ? "bg-[#00d3f2] text-[#003366] font-semibold shadow-lg" // ← ESTILO ACTIVO
-                        : "hover:bg-[#1a4876]" // ← ESTILO HOVER
+                        ? "bg-[#00d3f2] text-[#003366] font-semibold shadow-lg"
+                        : "hover:bg-[#1a4876]"
                     }`}
                     title={!isExpanded ? item.label : ""}
                   >

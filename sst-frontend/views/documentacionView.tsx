@@ -2,12 +2,7 @@
 
 import { useState, useMemo } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import {
-  Search,
-  FileText,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Search, FileText, Eye, EyeOff } from "lucide-react";
 import {
   useDocumentoAdminContext,
   DocumentoUsuario,
@@ -51,12 +46,8 @@ const getTypeConfig = (tipo: string) => {
 };
 
 const DocumentacionView = () => {
-  const {
-    documentosUsuario,
-    isLoading,
-    error,
-    marcarVisto,
-  } = useDocumentoAdminContext();
+  const { documentosUsuario, isLoading, error, marcarVisto } =
+    useDocumentoAdminContext();
   const [selectedFilter, setSelectedFilter] = useState<
     "todos" | "PROCEDIMIENTO" | "INSTRUCTIVO" | "MANUAL"
   >("todos");
@@ -69,9 +60,21 @@ const DocumentacionView = () => {
     const manuales = tipos.filter((t) => t === "MANUAL").length;
 
     return [
-      { key: "todos" as const, label: "Todos", count: documentosUsuario.length },
-      { key: "PROCEDIMIENTO" as const, label: "Procedimientos", count: procedimientos },
-      { key: "INSTRUCTIVO" as const, label: "Instructivos", count: instructivos },
+      {
+        key: "todos" as const,
+        label: "Todos",
+        count: documentosUsuario.length,
+      },
+      {
+        key: "PROCEDIMIENTO" as const,
+        label: "Procedimientos",
+        count: procedimientos,
+      },
+      {
+        key: "INSTRUCTIVO" as const,
+        label: "Instructivos",
+        count: instructivos,
+      },
       { key: "MANUAL" as const, label: "Manuales", count: manuales },
     ];
   }, [documentosUsuario]);
@@ -196,7 +199,9 @@ const DocumentacionView = () => {
                       <div
                         className={`w-16 h-16 rounded-full ${config.iconBg} group-hover:scale-110 flex items-center justify-center transition-transform`}
                       >
-                        <IconComponent className={`w-8 h-8 ${config.iconColor}`} />
+                        <IconComponent
+                          className={`w-8 h-8 ${config.iconColor}`}
+                        />
                       </div>
                       <div className="text-center">
                         <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">

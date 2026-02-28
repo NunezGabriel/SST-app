@@ -21,7 +21,8 @@ import {
 const DashboardView = () => {
   const { user } = useAuthContext();
   const { charlasUsuario, marcarCompletada } = useCharlaAdminContext();
-  const { unreadCount, reload: reloadNotificaciones } = useNotificacionContext();
+  const { unreadCount, reload: reloadNotificaciones } =
+    useNotificacionContext();
   const { reload: reloadLogros } = useLogroContext();
 
   // Fecha de hoy formateada
@@ -83,7 +84,7 @@ const DashboardView = () => {
         await marcarCompletada(charlaDelDia.id);
         // Recargar notificaciones y logros para reflejar cambios
         await Promise.all([reloadNotificaciones(), reloadLogros()]);
-        
+
         // Disparar evento para actualizar otras páginas (como el perfil)
         window.dispatchEvent(new CustomEvent("logro_desbloqueado"));
         localStorage.setItem("charlas_updated", Date.now().toString());
@@ -117,7 +118,7 @@ const DashboardView = () => {
           <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]"></div>
           <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-indigo-400 opacity-15 rounded-full blur-[80px]"></div>
 
-          <div className="relative z-10 flex justify-between items-start">
+          <div className="relative z-10 gap-5 flex-col flex md:flex-row justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-cyan-300 bg-opacity-20 backdrop-blur-sm flex items-center justify-center">

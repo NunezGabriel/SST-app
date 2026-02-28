@@ -17,7 +17,7 @@ import {
   ClipboardList,
   ChevronRight,
   BarChart2,
-  Bell
+  Bell,
 } from "lucide-react";
 
 const DasboardAdminView = () => {
@@ -51,19 +51,26 @@ const DasboardAdminView = () => {
   const cumplimientoGlobal =
     workers.length > 0
       ? Math.round(
-          workers.reduce((acc, w) => acc + (w.cumpl ?? 0), 0) / workers.length
+          workers.reduce((acc, w) => acc + (w.cumpl ?? 0), 0) / workers.length,
         )
       : 0;
 
   // Exámenes bloqueados (workers con examen === "Bloqueada")
   const examenBloqueados = workers.filter(
-    (w) => w.examen === "Bloqueada"
+    (w) => w.examen === "Bloqueada",
   ).length;
 
   // Distribución de exámenes
-  const examenAprobados  = workers.filter((w) => w.examen === "Aprobado").length;
-  const examenNoAprobado = workers.filter((w) => w.examen === "No aprobado").length;
-  const examenMaxVal     = Math.max(examenAprobados, examenNoAprobado, examenBloqueados, 1);
+  const examenAprobados = workers.filter((w) => w.examen === "Aprobado").length;
+  const examenNoAprobado = workers.filter(
+    (w) => w.examen === "No aprobado",
+  ).length;
+  const examenMaxVal = Math.max(
+    examenAprobados,
+    examenNoAprobado,
+    examenBloqueados,
+    1,
+  );
 
   // Tabla: primeros 4 workers
   const workerStats = workers.slice(0, 4);
@@ -206,29 +213,31 @@ const DasboardAdminView = () => {
               Acciones Rápidas
             </h3>
             <div className="space-y-3">
-              {acccionesRapidas.map(({ icon: Icon, color, label, sub, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition group"
-                >
-                  <div
-                    className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center`}
+              {acccionesRapidas.map(
+                ({ icon: Icon, color, label, sub, href }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition group"
                   >
-                    <Icon size={18} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {label}
-                    </p>
-                    <p className="text-xs text-gray-500">{sub}</p>
-                  </div>
-                  <ChevronRight
-                    size={16}
-                    className="text-gray-300 group-hover:text-gray-500 transition"
-                  />
-                </Link>
-              ))}
+                    <div
+                      className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center`}
+                    >
+                      <Icon size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {label}
+                      </p>
+                      <p className="text-xs text-gray-500">{sub}</p>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-300 group-hover:text-gray-500 transition"
+                    />
+                  </Link>
+                ),
+              )}
             </div>
           </div>
 
@@ -239,23 +248,51 @@ const DasboardAdminView = () => {
               Distribución de Exámenes
             </h3>
             {workers.length === 0 ? (
-              <p className="text-sm text-gray-400">No hay workers registrados</p>
+              <p className="text-sm text-gray-400">
+                No hay workers registrados
+              </p>
             ) : (
               <div className="space-y-5">
                 {[
-                  { label: "Aprobado",    count: examenAprobados,  color: "from-green-400 to-green-500",   badge: "bg-green-100 text-green-700"  },
-                  { label: "No aprobado", count: examenNoAprobado, color: "from-yellow-400 to-yellow-500", badge: "bg-yellow-100 text-yellow-700" },
-                  { label: "Bloqueada",   count: examenBloqueados, color: "from-red-400 to-red-500",       badge: "bg-red-100 text-red-700"      },
+                  {
+                    label: "Aprobado",
+                    count: examenAprobados,
+                    color: "from-green-400 to-green-500",
+                    badge: "bg-green-100 text-green-700",
+                  },
+                  {
+                    label: "No aprobado",
+                    count: examenNoAprobado,
+                    color: "from-yellow-400 to-yellow-500",
+                    badge: "bg-yellow-100 text-yellow-700",
+                  },
+                  {
+                    label: "Bloqueada",
+                    count: examenBloqueados,
+                    color: "from-red-400 to-red-500",
+                    badge: "bg-red-100 text-red-700",
+                  },
                 ].map(({ label, count, color, badge }) => (
                   <div key={label}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}>{label}</span>
-                      <span className="text-sm font-bold text-gray-800">{count} <span className="text-gray-400 font-normal">/ {workers.length}</span></span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-semibold ${badge}`}
+                      >
+                        {label}
+                      </span>
+                      <span className="text-sm font-bold text-gray-800">
+                        {count}{" "}
+                        <span className="text-gray-400 font-normal">
+                          / {workers.length}
+                        </span>
+                      </span>
                     </div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full bg-gradient-to-r ${color} rounded-full transition-all duration-700`}
-                        style={{ width: `${examenMaxVal > 0 ? (count / examenMaxVal) * 100 : 0}%` }}
+                        style={{
+                          width: `${examenMaxVal > 0 ? (count / examenMaxVal) * 100 : 0}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -264,15 +301,21 @@ const DasboardAdminView = () => {
                 {/* Resumen numérico */}
                 <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p className="text-xl font-bold text-green-600">{examenAprobados}</p>
+                    <p className="text-xl font-bold text-green-600">
+                      {examenAprobados}
+                    </p>
                     <p className="text-xs text-gray-400">Aprobaron</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-yellow-500">{examenNoAprobado}</p>
+                    <p className="text-xl font-bold text-yellow-500">
+                      {examenNoAprobado}
+                    </p>
                     <p className="text-xs text-gray-400">No aprobaron</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-red-500">{examenBloqueados}</p>
+                    <p className="text-xl font-bold text-red-500">
+                      {examenBloqueados}
+                    </p>
                     <p className="text-xs text-gray-400">Bloqueados</p>
                   </div>
                 </div>
@@ -314,8 +357,9 @@ const DasboardAdminView = () => {
                   </span>
                 </div>
                 <p className="text-xs text-amber-600">
-                  {examenBloqueados} worker{examenBloqueados > 1 ? "s llevan" : " lleva"} el examen bloqueado.
-                  Considera revisar su situación.
+                  {examenBloqueados} worker
+                  {examenBloqueados > 1 ? "s llevan" : " lleva"} el examen
+                  bloqueado. Considera revisar su situación.
                 </p>
               </div>
             )}

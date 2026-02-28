@@ -17,7 +17,7 @@ import {
   FileSpreadsheet,
   Shield,
   UserRoundCog,
-  ClipboardList,
+  Table2,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useNotificacionContext } from "@/context/NotificacionContext";
@@ -63,7 +63,7 @@ const SideBar = () => {
       href: "/formatos",
     },
     { icon: Shield, label: "Induccion", href: "/induccion" },
-    { icon: ClipboardList, label: "Registro", href: "/registro" },
+    { icon: Table2, label: "Registro", href: "/registro" },
   ];
 
   const workerOnlyItems: MenuItem[] = [

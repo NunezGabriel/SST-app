@@ -1,7 +1,13 @@
 import { useState } from "react";
 import LayoutComponent from "../components/layoutComponent";
 import ArchivoModal from "@/components/modals/registro/archivoModal";
-import { ChevronLeft, CalendarDays, Table2, Lock } from "lucide-react";
+import {
+  ChevronLeft,
+  CalendarDays,
+  Table2,
+  Lock,
+  GraduationCap,
+} from "lucide-react";
 import Link from "next/link";
 
 interface WeekData {
@@ -11,7 +17,7 @@ interface WeekData {
 
 interface MonthData {
   name: string;
-  monthIndex: number; // 0-based
+  monthIndex: number;
   weeks: WeekData[];
 }
 
@@ -139,14 +145,12 @@ const MONTHS: MonthData[] = [
 ];
 
 const today = new Date();
-const currentMonth = today.getMonth(); // 0-based
+const currentMonth = today.getMonth();
 const currentDay = today.getDate();
 
-const isMonthLocked = (monthIndex: number): boolean => {
-  return monthIndex > currentMonth;
-};
+const isMonthLocked = (monthIndex: number) => monthIndex > currentMonth;
 
-const isWeekLocked = (monthIndex: number, startDay: number): boolean => {
+const isWeekLocked = (monthIndex: number, startDay: number) => {
   if (monthIndex > currentMonth) return true;
   if (monthIndex < currentMonth) return false;
   return startDay > currentDay;
@@ -166,6 +170,12 @@ const RegistroView = () => {
   const handleMonthClick = (month: MonthData) => {
     if (isMonthLocked(month.monthIndex)) return;
     setSelectedMonth(month);
+  };
+
+  // Capacitación mensual: redirige directo al link (hardcodeado por ahora)
+  const handleCapacitacion = () => {
+    // TODO: reemplazar con el link real de la DB para este mes
+    window.open("#", "_blank");
   };
 
   return (
@@ -213,7 +223,7 @@ const RegistroView = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-15">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-10">
               {MONTHS.map((month) => {
                 const locked = isMonthLocked(month.monthIndex);
                 return (
@@ -229,8 +239,7 @@ const RegistroView = () => {
                       }`}
                   >
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors
-                      ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
                     >
                       {locked ? (
                         <Lock size={16} className="text-gray-500" />
@@ -260,7 +269,7 @@ const RegistroView = () => {
           </>
         )}
 
-        {/* — NIVEL 2: Semanas del mes seleccionado — */}
+        {/* — NIVEL 2: Semanas + Capacitación mensual — */}
         {selectedMonth && (
           <>
             <div className="mb-8">
@@ -279,6 +288,38 @@ const RegistroView = () => {
               </p>
             </div>
 
+            {/* Capacitación mensual — botón destacado aparte */}
+            <div className="mb-6">
+              <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3">
+                Documento mensual
+              </p>
+              <button
+                onClick={handleCapacitacion}
+                className="bg-amber-50 border border-amber-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-400 hover:bg-amber-100 transition-all duration-200 p-5 flex items-center gap-4 group w-full sm:w-auto"
+              >
+                <div className="w-12 h-12 rounded-full bg-amber-100 group-hover:bg-amber-500 flex items-center justify-center transition-colors shrink-0">
+                  <GraduationCap
+                    size={20}
+                    className="text-amber-500 group-hover:text-white transition-colors"
+                  />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-amber-700">
+                    Subir Capacitación Mensual
+                  </p>
+                  <p className="text-xs text-amber-400 mt-0.5">
+                    {selectedMonth.name} — Se abrirá el formulario directamente
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            {/* Divisor */}
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Documentos semanales
+            </p>
+
+            {/* Grid de semanas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {selectedMonth.weeks.map((week) => {
                 const locked = isWeekLocked(
@@ -298,8 +339,7 @@ const RegistroView = () => {
                       }`}
                   >
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors
-                      ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
                     >
                       {locked ? (
                         <Lock size={16} className="text-gray-500" />
@@ -311,8 +351,7 @@ const RegistroView = () => {
                       )}
                     </div>
                     <span
-                      className={`text-sm font-semibold text-center leading-snug
-                      ${locked ? "text-gray-500" : "text-gray-800"}`}
+                      className={`text-sm font-semibold text-center leading-snug ${locked ? "text-gray-500" : "text-gray-800"}`}
                     >
                       {week.label}
                     </span>

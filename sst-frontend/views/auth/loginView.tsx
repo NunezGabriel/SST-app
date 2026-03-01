@@ -30,19 +30,18 @@ const LoginView = () => {
     <div className="min-h-screen bg-[#003d70] flex flex-col items-center justify-center px-4 py-8">
       <div className="flex flex-col items-center justify-center w-full max-w-md">
         <div className="mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-opacity-50 flex items-center justify-center">
+          <div className="w-33 h-33 rounded-2xl bg-opacity-50 flex items-center justify-center">
             <Image
               src="/icon.png"
               alt="HSE Logo"
-              width={80}
-              height={80}
+              width={180}
+              height={180}
               priority
             />
           </div>
         </div>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">HSE App</h1>
           <p className="text-blue-200 text-sm">Health Safety & Enviorment</p>
         </div>
 
@@ -137,7 +136,7 @@ const LoginView = () => {
         </form>
 
         <p className="text-gray-400 text-xs mt-8 text-center">
-          © 2026 HSE App - Todos los derechos reservados
+          © 2026 Oracle Peru SAC - Todos los derechos reservados.
         </p>
       </div>
     </div>

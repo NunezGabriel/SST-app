@@ -20,7 +20,7 @@ interface ArchivoModalProps {
 
 // Opciones para el Trabajador — SIN capacitaciones (es mensual, va fuera del modal)
 const workerOptions = [
-  { label: "Licencia / SOAT / Bitácora", icon: CreditCard, color: "indigo" },
+  { label: "Bitácora", icon: CreditCard, color: "indigo" },
   { label: "Control de Salud Diario", icon: HeartPulse, color: "emerald" },
   { label: "ATS - Charla 5 min", icon: ClipboardList, color: "red" },
 ];

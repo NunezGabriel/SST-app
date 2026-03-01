@@ -38,8 +38,8 @@ interface EditArchivoModalProps {
 
 const WORKER_DOCS: Omit<DocLink, "link">[] = [
   {
-    id: "licencia",
-    label: "Licencia / SOAT / Bitácora",
+    id: "Bitacora",
+    label: "Bitácora",
     icon: CreditCard,
     color: "indigo",
   },
@@ -49,7 +49,6 @@ const WORKER_DOCS: Omit<DocLink, "link">[] = [
     icon: HeartPulse,
     color: "emerald",
   },
-  { id: "capac", label: "Capacitaciones", icon: GraduationCap, color: "amber" },
   { id: "ats", label: "ATS - Charla 5 min", icon: ClipboardList, color: "red" },
 ];
 

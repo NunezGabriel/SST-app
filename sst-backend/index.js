@@ -13,6 +13,7 @@ const logroRoutes = require("./routes/logroRoutes");
 const notificacionRoutes = require("./routes/notificacionRoutes");
 const induccionRoutes = require("./routes/induccionRoutes");
 const examenRoutes = require("./routes/examenRoutes");
+const driveRoutes = require("./routes/driveRoutes");
 
 const app = express();
 
@@ -63,6 +64,8 @@ app.use("/api/induccion", induccionRoutes);
 
 // Rutas de examen
 app.use("/api/examen", examenRoutes);
+
+app.use("/api/drive", driveRoutes);
 
 // Middleware 404 (debe ir al final)
 app.use((req, res) => {

@@ -15,10 +15,11 @@ async function login(correo, contrasena) {
   }
 
   const payload = {
-    id: usuario.id,
-    tipo: usuario.tipo,
-    nombre: usuario.nombre,
+    id:       usuario.id,
+    tipo:     usuario.tipo,
+    nombre:   usuario.nombre,
     apellido: usuario.apellido,
+    sede:     usuario.sede,      // ← agregado
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -28,7 +29,4 @@ async function login(correo, contrasena) {
   return { token, usuario: payload };
 }
 
-module.exports = {
-  login,
-};
-
+module.exports = { login };

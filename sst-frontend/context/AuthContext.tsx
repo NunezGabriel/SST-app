@@ -24,6 +24,7 @@ interface User {
   email?: string;
   token: string;
   apellido?: string;
+  sede?: string;
 }
 
 interface AuthContextType {
@@ -90,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: correo,
         token: token,
         apellido: usuario.apellido,
+        sede: usuario.sede ?? "TRUJILLO",
       };
 
       setUser(newUser);

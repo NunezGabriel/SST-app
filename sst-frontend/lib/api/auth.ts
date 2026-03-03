@@ -9,6 +9,7 @@ export interface LoginResponse {
     tipo: string;
     nombre: string;
     apellido: string;
+    sede: string;
   };
 }
 

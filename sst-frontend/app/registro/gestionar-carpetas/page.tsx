@@ -1,9 +1,9 @@
 "use client";
 
 import { useAuthContext } from "@/context/AuthContext";
-import GestionarLinkView from "@/views/admin/gestionarLinkView";
+import GestionarCarpetaView from "@/views/admin/gestionarCarpetaView";
 
-export default function RegistroPage() {
+export default function GestionarPage() {
   const { user, isLoading } = useAuthContext();
 
   if (isLoading) {
@@ -19,14 +19,8 @@ export default function RegistroPage() {
   }
 
   if (user.rol === "ADMIN") {
-    return <GestionarLinkView />;
+    return <GestionarCarpetaView />;
   }
 
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-lg">
-        No tienes permiso para acceder a esta página.
-      </div>
-    </div>
-  );
+  return <GestionarCarpetaView />;
 }

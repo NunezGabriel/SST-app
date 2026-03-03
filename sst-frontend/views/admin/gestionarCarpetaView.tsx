@@ -274,7 +274,7 @@ const CapacitacionMensualEditor = ({ monthName }: { monthName: string }) => {
 
 type Step = "rol" | "mes" | "semana" | "editar";
 
-const GestionarLinkView = () => {
+const GestionarCarpetaView = () => {
   const [step, setStep] = useState<Step>("rol");
   const [selectedRol, setSelectedRol] = useState<Rol | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
@@ -320,7 +320,7 @@ const GestionarLinkView = () => {
                 onClick={goToRol}
                 className="hover:text-gray-700 transition-colors"
               >
-                Gestionar Links
+                Gestionar Carpetas
               </button>
               {selectedRol && (
                 <>
@@ -520,4 +520,4 @@ const GestionarLinkView = () => {
   );
 };
 
-export default GestionarLinkView;
+export default GestionarCarpetaView;

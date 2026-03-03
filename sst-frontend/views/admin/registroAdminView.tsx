@@ -240,23 +240,22 @@ const RegistroAdminView = () => {
                         <Link2 size={18} className="text-white" />
                       </div>
                       <span className="text-indigo-400 font-semibold text-xs uppercase tracking-wider">
-                        GESTIÓN DE LINKS
+                        GESTIÓN DE CARPETAS
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-1">
-                      Editar links por semana
+                    <h2 className="text-2xl font-bold text-black mb-1">
+                      Configura las Carpetas de Drive
                     </h2>
                     <p className="text-gray-400 text-sm">
-                      Cada semana tiene sus propios links de carga. Configúralos
-                      aquí.
+                      Cada semana tiene sus propias carpetas, gestionalas aquí.
                     </p>
                   </div>
                   <Link
-                    href="/registro/gestionar-links"
+                    href="/registro/gestionar-carpetas"
                     className="self-start bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-5 py-2.5 rounded-full text-sm flex items-center gap-2 shadow-lg transition-all hover:scale-105"
                   >
                     <Link2 size={15} />
-                    Gestionar Links
+                    Gestionar Carpetas
                   </Link>
                 </div>
               </div>

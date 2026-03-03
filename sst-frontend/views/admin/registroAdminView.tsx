@@ -1,7 +1,15 @@
 import { useState } from "react";
 import LayoutComponent from "../../components/layoutComponent";
 import ArchivoModal from "@/components/modals/registro/archivoModal";
-import { ChevronLeft, CalendarDays, Table2, Lock, Link2 } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
+import {
+  ChevronLeft,
+  CalendarDays,
+  Table2,
+  Lock,
+  Link2,
+  GraduationCap,
+} from "lucide-react";
 import Link from "next/link";
 
 interface WeekData {
@@ -144,7 +152,6 @@ const currentDay = today.getDate();
 
 const isMonthLocked = (monthIndex: number): boolean =>
   monthIndex > currentMonth;
-
 const isWeekLocked = (monthIndex: number, startDay: number): boolean => {
   if (monthIndex > currentMonth) return true;
   if (monthIndex < currentMonth) return false;
@@ -152,6 +159,8 @@ const isWeekLocked = (monthIndex: number, startDay: number): boolean => {
 };
 
 const RegistroAdminView = () => {
+  const { user } = useAuthContext();
+
   const [selectedMonth, setSelectedMonth] = useState<MonthData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
@@ -165,6 +174,12 @@ const RegistroAdminView = () => {
   const handleMonthClick = (month: MonthData) => {
     if (isMonthLocked(month.monthIndex)) return;
     setSelectedMonth(month);
+  };
+
+  // Capacitación mensual admin — abre link directo
+  // TODO: fetch link real de DB para este mes
+  const handleCapacitacion = () => {
+    window.open("#", "_blank");
   };
 
   return (
@@ -186,8 +201,8 @@ const RegistroAdminView = () => {
             <div className="flex flex-col md:flex-row gap-4">
               {/* Banner: Cuadro de Control */}
               <div className="relative flex-1 bg-gradient-to from-[#003366] via-[#4b2c82] to-[#0066a3] rounded-3xl p-8 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden">
-                <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]"></div>
+                <div className="absolute -top-20 -right-20 w-72 h-72 bg-purple-500 opacity-20 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-400 opacity-20 rounded-full blur-[90px]" />
                 <div className="relative z-10 flex flex-col h-full justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-3">
@@ -216,22 +231,22 @@ const RegistroAdminView = () => {
 
               {/* Banner: Gestionar Links */}
               <div className="relative flex-1 bg-gradient-to from-[#1a1a2e] via-[#16213e] to-[#0f3460] rounded-3xl p-8 text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden">
-                <div className="absolute -top-20 -right-20 w-72 h-72 bg-blue-500 opacity-20 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-0 left-0 w-60 h-60 bg-indigo-500 opacity-20 rounded-full blur-[90px]"></div>
+                <div className="absolute -top-20 -right-20 w-72 h-72 bg-blue-500 opacity-20 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 left-0 w-60 h-60 bg-indigo-500 opacity-20 rounded-full blur-[90px]" />
                 <div className="relative z-10 flex flex-col h-full justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-10 h-10 rounded-2xl bg-indigo-500 bg-opacity-20 backdrop-blur-sm flex items-center justify-center">
                         <Link2 size={18} className="text-white" />
                       </div>
-                      <span className="text-indigo-600 font-semibold text-xs uppercase tracking-wider">
+                      <span className="text-indigo-400 font-semibold text-xs uppercase tracking-wider">
                         GESTIÓN DE LINKS
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-black mb-1">
+                    <h2 className="text-2xl font-bold text-white mb-1">
                       Editar links por semana
                     </h2>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-400 text-sm">
                       Cada semana tiene sus propios links de carga. Configúralos
                       aquí.
                     </p>
@@ -257,15 +272,10 @@ const RegistroAdminView = () => {
                     onClick={() => handleMonthClick(month)}
                     disabled={locked}
                     className={`rounded-2xl border shadow-sm transition-all duration-200 p-6 flex flex-col items-center gap-3 group
-                      ${
-                        locked
-                          ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40"
-                          : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"
-                      }`}
+                      ${locked ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40" : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"}`}
                   >
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors
-                      ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
                     >
                       {locked ? (
                         <Lock size={16} className="text-gray-500" />
@@ -281,9 +291,7 @@ const RegistroAdminView = () => {
                     >
                       {month.name}
                     </span>
-                    <span
-                      className={`text-xs ${locked ? "text-gray-400" : "text-gray-400"}`}
-                    >
+                    <span className="text-xs text-gray-400">
                       {locked
                         ? "No disponible"
                         : `${month.weeks.length} semanas`}
@@ -315,6 +323,12 @@ const RegistroAdminView = () => {
               </p>
             </div>
 
+            {/* Admin no tiene capacitación mensual — eso es solo de worker */}
+
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Documentos semanales
+            </p>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {selectedMonth.weeks.map((week) => {
                 const locked = isWeekLocked(
@@ -327,15 +341,10 @@ const RegistroAdminView = () => {
                     onClick={() => handleWeekClick(week.label, locked)}
                     disabled={locked}
                     className={`rounded-2xl border shadow-sm transition-all duration-200 p-6 flex flex-col items-center gap-3 group
-                      ${
-                        locked
-                          ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40"
-                          : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"
-                      }`}
+                      ${locked ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40" : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"}`}
                   >
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors
-                      ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
                     >
                       {locked ? (
                         <Lock size={16} className="text-gray-500" />
@@ -347,8 +356,7 @@ const RegistroAdminView = () => {
                       )}
                     </div>
                     <span
-                      className={`text-sm font-semibold text-center leading-snug
-                      ${locked ? "text-gray-500" : "text-gray-800"}`}
+                      className={`text-sm font-semibold text-center leading-snug ${locked ? "text-gray-500" : "text-gray-800"}`}
                     >
                       {week.label}
                     </span>
@@ -360,11 +368,13 @@ const RegistroAdminView = () => {
         )}
       </div>
 
-      {/* Modal — ya muestra weekLabel arriba para saber a qué semana corresponde */}
+      {/* Modal — user.rol es ADMIN entonces ArchivoModal mostrará los docs de admin automáticamente */}
       <ArchivoModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         weekLabel={selectedWeek ?? ""}
+        monthName={selectedMonth?.name ?? ""}
+        brigada={user?.sede ?? ""}
       />
     </LayoutComponent>
   );

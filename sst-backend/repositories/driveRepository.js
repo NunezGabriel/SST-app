@@ -78,4 +78,23 @@ async function subirArchivo({ buffer, mimetype, originalname, rutaCarpetas }) {
   return archivo.data;
 }
 
-module.exports = { listarArchivos, subirArchivo };
+// ─── Crear carpeta manualmente desde la UI ───────────────────────────────────
+async function crearCarpeta(nombre, parentId) {
+  const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const carpeta = await drive.files.create({
+    requestBody: {
+      name: nombre,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentId || ROOT],
+    },
+    fields: "id, name, mimeType, webViewLink",
+  });
+  return carpeta.data;
+}
+
+// ─── Eliminar archivo o carpeta ───────────────────────────────────────────────
+async function eliminar(fileId) {
+  await drive.files.delete({ fileId });
+}
+
+module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar };

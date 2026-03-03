@@ -34,4 +34,12 @@ async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
   });
 }
 
-module.exports = { listarArchivos, subirArchivo };
+async function crearCarpeta(nombre, parentId) {
+  return driveRepository.crearCarpeta(nombre, parentId);
+}
+
+async function eliminar(fileId) {
+  return driveRepository.eliminar(fileId);
+}
+
+module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar };

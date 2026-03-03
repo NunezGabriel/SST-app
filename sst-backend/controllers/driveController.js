@@ -29,7 +29,9 @@ async function subirArchivo(req, res) {
     const { rol, brigada, mes, semana, tipoDoc } = req.body;
 
     if (!rol || !brigada || !mes || !semana || !tipoDoc) {
-      return res.status(400).json({ error: "Faltan datos: rol, brigada, mes, semana, tipoDoc" });
+      return res
+        .status(400)
+        .json({ error: "Faltan datos: rol, brigada, mes, semana, tipoDoc" });
     }
 
     const resultado = await driveService.subirArchivo({
@@ -51,4 +53,32 @@ async function subirArchivo(req, res) {
   }
 }
 
-module.exports = { listarArchivos, subirArchivo };
+// POST /api/drive/carpeta
+async function crearCarpeta(req, res) {
+  try {
+    const { nombre, parentId } = req.body;
+    if (!nombre)
+      return res
+        .status(400)
+        .json({ error: "El nombre de la carpeta es requerido" });
+    const carpeta = await driveService.crearCarpeta(nombre, parentId);
+    res.json({ message: "Carpeta creada correctamente", carpeta });
+  } catch (error) {
+    console.error("Error al crear carpeta en Drive:", error);
+    res.status(500).json({ error: "Error al crear carpeta en Drive" });
+  }
+}
+
+// DELETE /api/drive/:fileId
+async function eliminar(req, res) {
+  try {
+    const { fileId } = req.params;
+    await driveService.eliminar(fileId);
+    res.json({ message: "Eliminado correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar de Drive:", error);
+    res.status(500).json({ error: "Error al eliminar de Drive" });
+  }
+}
+
+module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar };

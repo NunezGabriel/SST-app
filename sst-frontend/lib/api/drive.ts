@@ -36,7 +36,8 @@ export const getDriveFilesRequest = async (
     });
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || error.response?.data?.error;
+    const message =
+      error.response?.data?.message || error.response?.data?.error;
     throw new Error(message || "Error al obtener archivos de Drive.");
   }
 };
@@ -63,7 +64,42 @@ export const uploadDriveFileRequest = async (
     });
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || error.response?.data?.error;
+    const message =
+      error.response?.data?.message || error.response?.data?.error;
     throw new Error(message || "Error al subir el archivo.");
+  }
+};
+
+// ✅ Crear carpeta en Drive
+export const createDriveFolderRequest = async (
+  token: string,
+  nombre: string,
+  parentId?: string,
+): Promise<{ carpeta: DriveFile }> => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/drive/carpeta`,
+      { nombre, parentId },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.error;
+    throw new Error(message || "Error al crear la carpeta.");
+  }
+};
+
+// ✅ Eliminar archivo o carpeta de Drive
+export const deleteDriveItemRequest = async (
+  token: string,
+  fileId: string,
+): Promise<void> => {
+  try {
+    await axios.delete(`${API_URL}/api/drive/${fileId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error: any) {
+    const message = error.response?.data?.error;
+    throw new Error(message || "Error al eliminar.");
   }
 };

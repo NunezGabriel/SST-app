@@ -1,5 +1,5 @@
 const express = require("express");
-const multer  = require("multer");
+const multer = require("multer");
 const driveController = require("../controllers/driveController");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 
@@ -15,6 +15,17 @@ const upload = multer({
 router.get("/", authMiddleware, driveController.listarArchivos);
 
 // POST /api/drive/upload  (multipart/form-data)
-router.post("/upload", authMiddleware, upload.single("file"), driveController.subirArchivo);
+router.post(
+  "/upload",
+  authMiddleware,
+  upload.single("file"),
+  driveController.subirArchivo,
+);
+
+// POST /api/drive/carpeta
+router.post("/carpeta", authMiddleware, driveController.crearCarpeta);
+
+// DELETE /api/drive/:fileId
+router.delete("/:fileId", authMiddleware, driveController.eliminar);
 
 module.exports = router;

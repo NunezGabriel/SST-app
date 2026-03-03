@@ -193,7 +193,7 @@ const RegistroAdminView = () => {
                 Registro Admin
               </h1>
               <p className="text-gray-600">
-                Gestiona los documentos y configura los links por semana
+                Gestiona los documentos y configura las carpetas de Drive
               </p>
             </div>
 

@@ -11,6 +11,8 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB máximo
 });
 
+router.get("/estado-mes", authMiddleware, driveController.getEstadoMes);
+
 // GET  /api/drive?folderId=xxx
 router.get("/", authMiddleware, driveController.listarArchivos);
 

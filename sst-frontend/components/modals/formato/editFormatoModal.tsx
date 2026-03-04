@@ -16,14 +16,7 @@ interface EditFormatoModalProps {
   onSave: (data: FormatoFormData) => void;
 }
 
-const TIPOS_FORMATO = [
-  "Inspección",
-  "Incidentes",
-  "Riesgos",
-  "Capacitación",
-  "Equipos",
-  "Permisos",
-];
+const TIPOS_FORMATO = ["Inspección", "CheckList", "HSE Diarios"];
 
 const EditFormatoModal: React.FC<EditFormatoModalProps> = ({
   open,

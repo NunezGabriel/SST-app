@@ -2,16 +2,25 @@
 
 import { useState, useMemo } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import { FileText, Search, Filter, FileCheck, FileSpreadsheet, FileBarChart, FileX, FileType } from "lucide-react";
+import {
+  FileText,
+  Search,
+  Filter,
+  FileCheck,
+  FileSpreadsheet,
+  FileBarChart,
+  FileX,
+  FileType,
+} from "lucide-react";
 import { useFormatoAdminContext, Formato } from "@/context/FormatoAdminContext";
 
 const iconoPorTipo = (tipo: string | null) => {
   switch (tipo) {
     case "Inspección":
       return FileCheck;
-    case "Incidentes":
-      return FileX;
-    case "Riesgos":
+    case "CheckList":
+      return FileText;
+    case "HSE Diarios":
       return FileBarChart;
     case "Capacitación":
       return FileText;

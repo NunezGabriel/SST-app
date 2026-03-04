@@ -1,16 +1,24 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import { CheckCircle2, XCircle, Lock, Users, ShieldCheck } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
+import {
+  CheckCircle2,
+  XCircle,
+  Lock,
+  Loader2,
+  Users,
+  ShieldCheck,
+} from "lucide-react";
+import axios from "axios";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+const API_URL = "http://localhost:8080";
 
-type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO";
+type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO" | "CARGANDO";
 type Vista = "WORKER" | "ADMIN";
 
-// ─── Datos hardcodeados — reemplazar con fetch a DB ───────────────────────────
-
 const BRIGADAS = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
-
 const MONTHS = [
   "Enero",
   "Febrero",
@@ -25,21 +33,18 @@ const MONTHS = [
   "Noviembre",
   "Diciembre",
 ];
-
 const SEMANAS = (m: string) => [
-  `01 - 07 ${m}`,
-  `08 - 14 ${m}`,
-  `15 - 21 ${m}`,
-  `22 - fin ${m}`,
+  `01 al 07 de ${m}`,
+  `08 al 14 de ${m}`,
+  `15 al 21 de ${m}`,
+  `22 al 31 de ${m}`,
 ];
-
-// Docs requeridos para COMPLETO en cada semana
-const WORKER_SEMANA_DOCS = [
+const WORKER_DOCS = [
   "Licencia / SOAT / Bitácora",
-  "Control de Salud",
+  "Control de Salud Diario",
   "ATS - Charla 5 min",
 ];
-const ADMIN_SEMANA_DOCS = [
+const ADMIN_DOCS = [
   "Triaje",
   "Cargo de EPPs",
   "SCTR",
@@ -48,30 +53,21 @@ const ADMIN_SEMANA_DOCS = [
   "Vigilancia COVID",
 ];
 
-// Mock — reemplazar con fetch real
-const mockW = (brigada: string, semIdx: number, mIdx: number): Estado => {
-  const h = (brigada.charCodeAt(0) * 3 + semIdx * 17 + mIdx * 7) % 10;
-  return h > 4 ? "COMPLETO" : "FALTA";
-};
-const mockWMensual = (brigada: string, mIdx: number): Estado => {
-  const h = (brigada.charCodeAt(1) * 5 + mIdx * 11) % 10;
-  return h > 4 ? "COMPLETO" : "FALTA";
-};
-const mockA = (brigada: string, semIdx: number, mIdx: number): Estado => {
-  const h = (brigada.charCodeAt(0) * 11 + semIdx * 13 + mIdx * 5) % 10;
-  return h > 4 ? "COMPLETO" : "FALTA";
-};
-
-// ─── UI ───────────────────────────────────────────────────────────────────────
-
 const today = new Date();
 const currentMonth = today.getMonth();
 
+// ─── Celda ────────────────────────────────────────────────────────────────────
 const EstadoCell = ({ estado }: { estado: Estado }) => {
   if (estado === "BLOQUEADO")
     return (
       <td className="px-3 py-3 text-center border border-gray-100 bg-gray-50/80 w-28">
         <Lock size={13} className="text-gray-300 mx-auto" />
+      </td>
+    );
+  if (estado === "CARGANDO")
+    return (
+      <td className="px-3 py-3 text-center border border-gray-100 w-28">
+        <Loader2 size={13} className="text-gray-300 mx-auto animate-spin" />
       </td>
     );
   if (estado === "COMPLETO")
@@ -97,17 +93,58 @@ const EstadoCell = ({ estado }: { estado: Estado }) => {
   );
 };
 
-// ─── Tabla Worker ─────────────────────────────────────────────────────────────
-
-const WorkerMonthTable = ({
+// ─── Tabla genérica ───────────────────────────────────────────────────────────
+const MonthTable = ({
   monthName,
   monthIndex,
+  rol,
+  token,
+  docs,
+  conMensual,
+  accentClass,
 }: {
   monthName: string;
   monthIndex: number;
+  rol: Vista;
+  token: string;
+  docs: string[];
+  conMensual: boolean;
+  accentClass: {
+    header: string;
+    subheader: string;
+    mensual: string;
+    brigCell: string;
+    badge: string;
+    badgeText: string;
+  };
 }) => {
   const locked = monthIndex > currentMonth;
   const semanas = SEMANAS(monthName);
+
+  const [estadoMes, setEstadoMes] = useState<Record<
+    string,
+    Record<string, boolean>
+  > | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (locked || !token) return;
+    setIsLoading(true);
+    axios
+      .get(`${API_URL}/api/drive/estado-mes`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { mes: monthName, rol },
+      })
+      .then((res) => setEstadoMes(res.data.estado))
+      .catch(() => setEstadoMes(null))
+      .finally(() => setIsLoading(false));
+  }, [monthName, rol, locked, token]);
+
+  const getEstado = (brigada: string, key: string): Estado => {
+    if (locked) return "BLOQUEADO";
+    if (isLoading || !estadoMes) return "CARGANDO";
+    return estadoMes[brigada]?.[key] ? "COMPLETO" : "FALTA";
+  };
 
   return (
     <div
@@ -121,7 +158,9 @@ const WorkerMonthTable = ({
           {monthName} {today.getFullYear()}
         </h2>
         {!locked && monthIndex === currentMonth && (
-          <span className="text-[10px] bg-cyan-100 text-cyan-600 font-bold px-2 py-0.5 rounded-full">
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${accentClass.badge} ${accentClass.badgeText}`}
+          >
             Mes actual
           </span>
         )}
@@ -131,133 +170,56 @@ const WorkerMonthTable = ({
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="px-4 py-2.5 text-left font-bold text-white bg-[#003366] border-r border-blue-900 whitespace-nowrap min-w-[130px]">
+              <th
+                className={`px-4 py-2.5 text-left font-bold text-white ${accentClass.header} border-r border-opacity-30 whitespace-nowrap min-w-[130px]`}
+              >
                 BRIGADA
               </th>
               {semanas.map((sem, i) => (
                 <th
-                  key={`wh-${monthIndex}-${i}`}
-                  className="px-3 py-2.5 text-center font-semibold text-white bg-[#1a4d8f] border-r border-blue-800 whitespace-nowrap w-28 text-[10px] leading-tight"
+                  key={i}
+                  className={`px-3 py-2.5 text-center font-semibold text-white ${accentClass.subheader} border-r border-opacity-20 whitespace-nowrap w-28 text-[10px] leading-tight`}
                 >
                   {sem}
                 </th>
               ))}
-              <th className="px-3 py-2.5 text-center font-semibold text-white bg-[#0f3460] whitespace-nowrap w-28 text-[10px] leading-tight">
-                Capacitación
-                <br />
-                Mensual
-              </th>
+              {conMensual && (
+                <th
+                  className={`px-3 py-2.5 text-center font-semibold text-white ${accentClass.mensual} whitespace-nowrap w-28 text-[10px] leading-tight`}
+                >
+                  Capacitación
+                  <br />
+                  Mensual
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {BRIGADAS.map((brigada, bIdx) => (
               <tr
-                key={`w-${monthIndex}-${brigada}`}
+                key={brigada}
                 className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}
               >
-                <td className="px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 bg-blue-50/60 whitespace-nowrap text-xs">
-                  {brigada}
-                </td>
-                {semanas.map((_, semIdx) => (
-                  <EstadoCell
-                    key={`w-${monthIndex}-${brigada}-${semIdx}`}
-                    estado={
-                      locked ? "BLOQUEADO" : mockW(brigada, semIdx, monthIndex)
-                    }
-                  />
-                ))}
-                <EstadoCell
-                  key={`w-${monthIndex}-${brigada}-m`}
-                  estado={
-                    locked ? "BLOQUEADO" : mockWMensual(brigada, monthIndex)
-                  }
-                />
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!locked && (
-        <p className="text-[10px] text-gray-400 mt-1.5 ml-1">
-          ✓ Completo = {WORKER_SEMANA_DOCS.join(" · ")}
-        </p>
-      )}
-    </div>
-  );
-};
-
-// ─── Tabla Admin ──────────────────────────────────────────────────────────────
-
-const AdminMonthTable = ({
-  monthName,
-  monthIndex,
-}: {
-  monthName: string;
-  monthIndex: number;
-}) => {
-  const locked = monthIndex > currentMonth;
-  const semanas = SEMANAS(monthName);
-
-  return (
-    <div
-      className={`mb-8 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        {locked && <Lock size={12} className="text-gray-400" />}
-        <h2
-          className={`text-xs font-bold uppercase tracking-widest ${locked ? "text-gray-400" : "text-gray-600"}`}
-        >
-          {monthName} {today.getFullYear()}
-        </h2>
-        {!locked && monthIndex === currentMonth && (
-          <span className="text-[10px] bg-purple-100 text-purple-600 font-bold px-2 py-0.5 rounded-full">
-            Mes actual
-          </span>
-        )}
-      </div>
-
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-        <table className="w-full text-xs border-collapse">
-          <thead>
-            <tr>
-              <th className="px-4 py-2.5 text-left font-bold text-white bg-[#3b0764] border-r border-purple-900 whitespace-nowrap min-w-[130px]">
-                BRIGADA
-              </th>
-              {semanas.map((sem, i) => (
-                <th
-                  key={`ah-${monthIndex}-${i}`}
-                  className="px-3 py-2.5 text-center font-semibold text-white bg-[#5b21b6] border-r border-purple-800 whitespace-nowrap w-28 text-[10px] leading-tight"
+                <td
+                  className={`px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 ${accentClass.brigCell} whitespace-nowrap text-xs`}
                 >
-                  {sem}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {BRIGADAS.map((brigada, bIdx) => (
-              <tr
-                key={`a-${monthIndex}-${brigada}`}
-                className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}
-              >
-                <td className="px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 bg-purple-50/60 whitespace-nowrap text-xs">
                   {brigada}
                 </td>
-                {semanas.map((_, semIdx) => (
-                  <EstadoCell
-                    key={`a-${monthIndex}-${brigada}-${semIdx}`}
-                    estado={
-                      locked ? "BLOQUEADO" : mockA(brigada, semIdx, monthIndex)
-                    }
-                  />
+                {semanas.map((sem) => (
+                  <EstadoCell key={sem} estado={getEstado(brigada, sem)} />
                 ))}
+                {conMensual && (
+                  <EstadoCell estado={getEstado(brigada, "mensual")} />
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
       {!locked && (
         <p className="text-[10px] text-gray-400 mt-1.5 ml-1">
-          ✓ Completo = {ADMIN_SEMANA_DOCS.join(" · ")}
+          ✓ Completo = {docs.join(" · ")}
         </p>
       )}
     </div>
@@ -265,9 +227,26 @@ const AdminMonthTable = ({
 };
 
 // ─── View ─────────────────────────────────────────────────────────────────────
-
 const CuadroControlAdminView = () => {
+  const { user } = useAuthContext();
   const [vista, setVista] = useState<Vista>("WORKER");
+
+  const workerAccent = {
+    header: "bg-[#003366]",
+    subheader: "bg-[#1a4d8f]",
+    mensual: "bg-[#0f3460]",
+    brigCell: "bg-blue-50/60",
+    badge: "bg-cyan-100",
+    badgeText: "text-cyan-600",
+  };
+  const adminAccent = {
+    header: "bg-[#3b0764]",
+    subheader: "bg-[#5b21b6]",
+    mensual: "bg-[#3b0764]",
+    brigCell: "bg-purple-50/60",
+    badge: "bg-purple-100",
+    badgeText: "text-purple-600",
+  };
 
   return (
     <LayoutComponent>
@@ -285,45 +264,31 @@ const CuadroControlAdminView = () => {
         <div className="flex gap-3 mb-8">
           <button
             onClick={() => setVista("WORKER")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
-              vista === "WORKER"
-                ? "bg-[#003366] text-white shadow-md"
-                : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
-            }`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${vista === "WORKER" ? "bg-[#003366] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"}`}
           >
-            <Users size={15} />
-            Workers
+            <Users size={15} /> Workers
           </button>
           <button
             onClick={() => setVista("ADMIN")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
-              vista === "ADMIN"
-                ? "bg-[#3b0764] text-white shadow-md"
-                : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
-            }`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${vista === "ADMIN" ? "bg-[#3b0764] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"}`}
           >
-            <ShieldCheck size={15} />
-            Admin
+            <ShieldCheck size={15} /> Admin
           </button>
         </div>
 
         {/* Tablas */}
-        {vista === "WORKER" &&
-          MONTHS.map((month, i) => (
-            <WorkerMonthTable
-              key={`worker-${month}`}
-              monthName={month}
-              monthIndex={i}
-            />
-          ))}
-        {vista === "ADMIN" &&
-          MONTHS.map((month, i) => (
-            <AdminMonthTable
-              key={`admin-${month}`}
-              monthName={month}
-              monthIndex={i}
-            />
-          ))}
+        {MONTHS.map((month, i) => (
+          <MonthTable
+            key={`${vista}-${month}`}
+            monthName={month}
+            monthIndex={i}
+            rol={vista}
+            token={user?.token ?? ""}
+            docs={vista === "WORKER" ? WORKER_DOCS : ADMIN_DOCS}
+            conMensual={vista === "WORKER"}
+            accentClass={vista === "WORKER" ? workerAccent : adminAccent}
+          />
+        ))}
       </div>
     </LayoutComponent>
   );

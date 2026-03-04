@@ -28,7 +28,7 @@ async function subirArchivo(req, res) {
 
     const { rol, brigada, mes, semana, tipoDoc } = req.body;
 
-    if (!rol || !brigada || !mes || !semana || !tipoDoc) {
+    if (!rol || !brigada || !mes || !tipoDoc) {
       return res
         .status(400)
         .json({ error: "Faltan datos: rol, brigada, mes, semana, tipoDoc" });
@@ -81,4 +81,34 @@ async function eliminar(req, res) {
   }
 }
 
-module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar };
+// ─── AGREGAR al driveController.js ───────────────────────────────────────────
+
+// GET /api/drive/estado-mes?mes=Marzo&rol=WORKER
+async function getEstadoMes(req, res) {
+  try {
+    const { mes, rol } = req.query;
+    if (!mes || !rol)
+      return res.status(400).json({ error: "Faltan parámetros: mes, rol" });
+    const estado = await driveService.getEstadoMes(mes, rol);
+    res.json({ estado });
+  } catch (error) {
+    console.error("Error al obtener estado del mes:", error.message);
+    res.status(500).json({ error: "Error al obtener estado del mes" });
+  }
+}
+
+// module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes };
+
+// ─── AGREGAR a driveRoutes.js ─────────────────────────────────────────────────
+// IMPORTANTE: esta ruta debe ir ANTES de router.get("/") para evitar conflictos
+
+// GET /api/drive/estado-mes?mes=Marzo&rol=WORKER
+// router.get("/estado-mes", authMiddleware, driveController.getEstadoMes);
+
+module.exports = {
+  listarArchivos,
+  subirArchivo,
+  crearCarpeta,
+  eliminar,
+  getEstadoMes,
+};

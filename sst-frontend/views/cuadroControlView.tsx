@@ -1,14 +1,16 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import LayoutComponent from "../components/layoutComponent";
-import { CheckCircle2, XCircle, Lock } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
+import { CheckCircle2, XCircle, Lock, Loader2 } from "lucide-react";
+import axios from "axios";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+const API_URL = "http://localhost:8080";
 
-type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO";
-
-// ─── Datos hardcodeados — reemplazar con fetch a DB ───────────────────────────
+type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO" | "CARGANDO";
 
 const BRIGADAS = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
-
 const MONTHS = [
   "Enero",
   "Febrero",
@@ -23,50 +25,33 @@ const MONTHS = [
   "Noviembre",
   "Diciembre",
 ];
-
-// 4 semanas fijas por mes
 const SEMANAS = (m: string) => [
-  `01 - 07 ${m}`,
-  `08 - 14 ${m}`,
-  `15 - 21 ${m}`,
-  `22 - fin ${m}`,
+  `01 al 07 de ${m}`,
+  `08 al 14 de ${m}`,
+  `15 al 21 de ${m}`,
+  `22 al 31 de ${m}`,
 ];
-
-// Documentos que deben subirse cada semana (los 3 deben estar para ser COMPLETO)
-// En real: verificar en DB que los 3 existen para esa brigada+semana
-const WORKER_SEMANA_DOCS = [
+const WORKER_DOCS = [
   "Licencia / SOAT / Bitácora",
-  "Control de Salud",
+  "Control de Salud Diario",
   "ATS - Charla 5 min",
 ];
-
-// Mock: verde solo si "todos los docs de esa semana están subidos"
-// Reemplazar: consultar si brigada+mes+semana tiene los 3 docs
-const mockSemana = (
-  brigada: string,
-  semIdx: number,
-  monthIndex: number,
-): Estado => {
-  const h = (brigada.charCodeAt(0) * 3 + semIdx * 17 + monthIndex * 7) % 10;
-  // Simula que COMPLETO = todos los docs subidos
-  return h > 4 ? "COMPLETO" : "FALTA";
-};
-
-const mockMensual = (brigada: string, monthIndex: number): Estado => {
-  const h = (brigada.charCodeAt(1) * 5 + monthIndex * 11) % 10;
-  return h > 4 ? "COMPLETO" : "FALTA";
-};
-
-// ─── UI ───────────────────────────────────────────────────────────────────────
 
 const today = new Date();
 const currentMonth = today.getMonth();
 
+// ─── Celda de estado ─────────────────────────────────────────────────────────
 const EstadoCell = ({ estado }: { estado: Estado }) => {
   if (estado === "BLOQUEADO")
     return (
       <td className="px-3 py-3 text-center border border-gray-100 bg-gray-50/80 w-28">
         <Lock size={13} className="text-gray-300 mx-auto" />
+      </td>
+    );
+  if (estado === "CARGANDO")
+    return (
+      <td className="px-3 py-3 text-center border border-gray-100 w-28">
+        <Loader2 size={13} className="text-gray-300 mx-auto animate-spin" />
       </td>
     );
   if (estado === "COMPLETO")
@@ -92,15 +77,44 @@ const EstadoCell = ({ estado }: { estado: Estado }) => {
   );
 };
 
+// ─── Tabla por mes ────────────────────────────────────────────────────────────
 const MonthTable = ({
   monthName,
   monthIndex,
+  token,
 }: {
   monthName: string;
   monthIndex: number;
+  token: string;
 }) => {
   const locked = monthIndex > currentMonth;
   const semanas = SEMANAS(monthName);
+
+  // Estado: { CHICLAYO: { "01 al 07 de Enero": true, mensual: false }, ... }
+  const [estadoMes, setEstadoMes] = useState<Record<
+    string,
+    Record<string, boolean>
+  > | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (locked || !token) return;
+    setIsLoading(true);
+    axios
+      .get(`${API_URL}/api/drive/estado-mes`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { mes: monthName, rol: "WORKER" },
+      })
+      .then((res) => setEstadoMes(res.data.estado))
+      .catch(() => setEstadoMes(null))
+      .finally(() => setIsLoading(false));
+  }, [monthName, locked, token]);
+
+  const getEstado = (brigada: string, key: string): Estado => {
+    if (locked) return "BLOQUEADO";
+    if (isLoading || !estadoMes) return "CARGANDO";
+    return estadoMes[brigada]?.[key] ? "COMPLETO" : "FALTA";
+  };
 
   return (
     <div
@@ -129,7 +143,7 @@ const MonthTable = ({
               </th>
               {semanas.map((sem, i) => (
                 <th
-                  key={`header-${monthIndex}-${i}`}
+                  key={i}
                   className="px-3 py-2.5 text-center font-semibold text-white bg-[#1a4d8f] border-r border-blue-800 whitespace-nowrap w-28 text-[10px] leading-tight"
                 >
                   {sem}
@@ -145,44 +159,25 @@ const MonthTable = ({
           <tbody>
             {BRIGADAS.map((brigada, bIdx) => (
               <tr
-                key={`${monthIndex}-${brigada}`}
+                key={brigada}
                 className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}
               >
                 <td className="px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 bg-blue-50/60 whitespace-nowrap text-xs">
                   {brigada}
                 </td>
-                {semanas.map((_, semIdx) => {
-                  const estado: Estado = locked
-                    ? "BLOQUEADO"
-                    : mockSemana(brigada, semIdx, monthIndex);
-                  return (
-                    <EstadoCell
-                      key={`${monthIndex}-${brigada}-sem-${semIdx}`}
-                      estado={estado}
-                    />
-                  );
-                })}
-                {(() => {
-                  const estado: Estado = locked
-                    ? "BLOQUEADO"
-                    : mockMensual(brigada, monthIndex);
-                  return (
-                    <EstadoCell
-                      key={`${monthIndex}-${brigada}-mensual`}
-                      estado={estado}
-                    />
-                  );
-                })()}
+                {semanas.map((sem) => (
+                  <EstadoCell key={sem} estado={getEstado(brigada, sem)} />
+                ))}
+                <EstadoCell estado={getEstado(brigada, "mensual")} />
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Leyenda de docs requeridos por semana */}
       {!locked && (
         <p className="text-[10px] text-gray-400 mt-1.5 ml-1">
-          ✓ Completo = todos los docs subidos: {WORKER_SEMANA_DOCS.join(" · ")}
+          ✓ Completo = todos los docs subidos: {WORKER_DOCS.join(" · ")}
         </p>
       )}
     </div>
@@ -190,23 +185,30 @@ const MonthTable = ({
 };
 
 // ─── View ─────────────────────────────────────────────────────────────────────
-
-const CuadroControlView = () => (
-  <LayoutComponent>
-    <div className="min-h-screen p-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Cuadro de Control
-        </h1>
-        <p className="text-gray-600">
-          Registro mensual de documentos por brigada
-        </p>
+const CuadroControlView = () => {
+  const { user } = useAuthContext();
+  return (
+    <LayoutComponent>
+      <div className="min-h-screen p-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Cuadro de Control
+          </h1>
+          <p className="text-gray-600">
+            Registro mensual de documentos por brigada
+          </p>
+        </div>
+        {MONTHS.map((month, i) => (
+          <MonthTable
+            key={month}
+            monthName={month}
+            monthIndex={i}
+            token={user?.token ?? ""}
+          />
+        ))}
       </div>
-      {MONTHS.map((month, i) => (
-        <MonthTable key={month} monthName={month} monthIndex={i} />
-      ))}
-    </div>
-  </LayoutComponent>
-);
+    </LayoutComponent>
+  );
+};
 
 export default CuadroControlView;

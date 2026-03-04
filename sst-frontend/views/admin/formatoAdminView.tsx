@@ -128,10 +128,10 @@ const FormatoAdminView = () => {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#022B54] mb-1">
-                Formatos y Plantillas
+                Formatos HSE
               </h1>
               <p className="text-gray-600">
-                Gestión de formatos y plantillas del sistema
+                Gestión de formatos HSE del sistema
               </p>
             </div>
             <button

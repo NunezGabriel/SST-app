@@ -153,7 +153,7 @@ const DocumentacionAdminView = () => {
         <div className="flex items-start justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Documentación en Seguridad
+              Documentación HSE
             </h1>
             <p className="text-gray-600">
               Gestión de recursos, guías y protocolos de SST

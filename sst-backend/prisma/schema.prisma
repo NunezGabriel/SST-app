@@ -98,9 +98,21 @@ model DocumentoSeguridad {
 }
 
 enum TipoDocumento {
+  // Manten los antiguos para que no falle la conexión
   PROCEDIMIENTO
   INSTRUCTIVO
   MANUAL
+  
+  // Agrega los nuevos que querías
+  MAPA_DE_RIESGOS
+  MATRIZ_AMBIENTAL
+  MATRIZ_DE_EPPS
+  MATRIZ_IPERC
+  PLAN_DE_CONTINGENCIA
+  PLANES_QHSE
+  POLITICA
+  PROGRAMAS
+  RISST
 }
 
 // ============================================

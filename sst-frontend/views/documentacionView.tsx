@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import LayoutComponent from "@/components/layoutComponent";
-import { Search, FileText, Eye, EyeOff } from "lucide-react";
+import { Search, FileText, Eye, EyeOff, Filter } from "lucide-react";
 import {
   useDocumentoAdminContext,
   DocumentoUsuario,
@@ -34,6 +34,78 @@ const getTypeConfig = (tipo: string) => {
         iconColor: "text-purple-600",
         label: "Manual",
       };
+    case "MAPA_DE_RIESGOS":
+      return {
+        icon: FileText,
+        barColor: "bg-red-500",
+        iconBg: "bg-red-100",
+        iconColor: "text-red-600",
+        label: "Mapa de Riesgos",
+      };
+    case "MATRIZ_AMBIENTAL":
+      return {
+        icon: FileText,
+        barColor: "bg-emerald-500",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
+        label: "Matriz Ambiental",
+      };
+    case "MATRIZ_DE_EPPS":
+      return {
+        icon: FileText,
+        barColor: "bg-orange-500",
+        iconBg: "bg-orange-100",
+        iconColor: "text-orange-600",
+        label: "Matriz de EPPs",
+      };
+    case "MATRIZ_IPERC":
+      return {
+        icon: FileText,
+        barColor: "bg-yellow-500",
+        iconBg: "bg-yellow-100",
+        iconColor: "text-yellow-600",
+        label: "Matriz IPERC",
+      };
+    case "PLAN_DE_CONTINGENCIA":
+      return {
+        icon: FileText,
+        barColor: "bg-rose-500",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
+        label: "Plan de Contingencia",
+      };
+    case "PLANES_QHSE":
+      return {
+        icon: FileText,
+        barColor: "bg-teal-500",
+        iconBg: "bg-teal-100",
+        iconColor: "text-teal-600",
+        label: "Planes QHSE",
+      };
+    case "POLITICA":
+      return {
+        icon: FileText,
+        barColor: "bg-indigo-500",
+        iconBg: "bg-indigo-100",
+        iconColor: "text-indigo-600",
+        label: "Política",
+      };
+    case "PROGRAMAS":
+      return {
+        icon: FileText,
+        barColor: "bg-cyan-500",
+        iconBg: "bg-cyan-100",
+        iconColor: "text-cyan-600",
+        label: "Programas",
+      };
+    case "RISST":
+      return {
+        icon: FileText,
+        barColor: "bg-slate-500",
+        iconBg: "bg-slate-100",
+        iconColor: "text-slate-600",
+        label: "RISST",
+      };
     default:
       return {
         icon: FileText,
@@ -49,34 +121,62 @@ const DocumentacionView = () => {
   const { documentosUsuario, isLoading, error, marcarVisto } =
     useDocumentoAdminContext();
   const [selectedFilter, setSelectedFilter] = useState<
-    "todos" | "PROCEDIMIENTO" | "INSTRUCTIVO" | "MANUAL"
+    | "todos"
+    | "PROCEDIMIENTO"
+    | "INSTRUCTIVO"
+    | "MANUAL"
+    | "MAPA_DE_RIESGOS"
+    | "MATRIZ_AMBIENTAL"
+    | "MATRIZ_DE_EPPS"
+    | "MATRIZ_IPERC"
+    | "PLAN_DE_CONTINGENCIA"
+    | "PLANES_QHSE"
+    | "POLITICA"
+    | "PROGRAMAS"
+    | "RISST"
   >("todos");
   const [busqueda, setBusqueda] = useState("");
 
+  const tipoLabels: Record<string, string> = {
+    PROCEDIMIENTO: "Procedimientos",
+    INSTRUCTIVO: "Instructivos",
+    MANUAL: "Manuales",
+    MAPA_DE_RIESGOS: "Mapa de Riesgos",
+    MATRIZ_AMBIENTAL: "Matriz Ambiental",
+    MATRIZ_DE_EPPS: "Matriz de EPPs",
+    MATRIZ_IPERC: "Matriz IPERC",
+    PLAN_DE_CONTINGENCIA: "Plan de Contingencia",
+    PLANES_QHSE: "Planes QHSE",
+    POLITICA: "Política",
+    PROGRAMAS: "Programas",
+    RISST: "RISST",
+  };
+
   const filterOptions = useMemo(() => {
     const tipos = documentosUsuario.map((d) => d.tipo);
-    const procedimientos = tipos.filter((t) => t === "PROCEDIMIENTO").length;
-    const instructivos = tipos.filter((t) => t === "INSTRUCTIVO").length;
-    const manuales = tipos.filter((t) => t === "MANUAL").length;
-
-    return [
+    const tiposUnicos = Array.from(new Set(tipos));
+    
+    const options: Array<{
+      key: typeof selectedFilter;
+      label: string;
+    }> = [
       {
-        key: "todos" as const,
+        key: "todos",
         label: "Todos",
-        count: documentosUsuario.length,
       },
-      {
-        key: "PROCEDIMIENTO" as const,
-        label: "Procedimientos",
-        count: procedimientos,
-      },
-      {
-        key: "INSTRUCTIVO" as const,
-        label: "Instructivos",
-        count: instructivos,
-      },
-      { key: "MANUAL" as const, label: "Manuales", count: manuales },
     ];
+
+    // Agregar todos los tipos disponibles
+    tiposUnicos.forEach((tipo) => {
+      if (tipoLabels[tipo]) {
+        options.push({
+          key: tipo as typeof selectedFilter,
+          label: tipoLabels[tipo],
+        });
+      }
+    });
+
+    return options;
   }, [documentosUsuario]);
 
   const filteredDocs = useMemo(() => {
@@ -120,17 +220,40 @@ const DocumentacionView = () => {
           </p>
         </div>
 
-        {/* Search */}
+        {/* Search and Filter */}
         <div className="mb-8">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Busca riesgos laborales, equipos de protección, protocolos..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-            />
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Buscador */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Busca riesgos laborales, equipos de protección, protocolos..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Filtro por tipo */}
+            <div className="relative">
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={selectedFilter}
+                onChange={(e) =>
+                  setSelectedFilter(
+                    e.target.value as typeof selectedFilter
+                  )
+                }
+                className="pl-12 pr-10 py-3 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent appearance-none cursor-pointer min-w-[200px]"
+              >
+                {filterOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -152,27 +275,9 @@ const DocumentacionView = () => {
           </div>
         )}
 
-        {/* Filter Tabs */}
+        {/* Cards Grid */}
         {!isLoading && !error && (
           <>
-            <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
-              {filterOptions.map((option) => (
-                <button
-                  key={option.key}
-                  onClick={() => setSelectedFilter(option.key)}
-                  className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all ${
-                    selectedFilter === option.key
-                      ? "bg-cyan-500 text-white shadow-md"
-                      : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  {option.label}{" "}
-                  <span className="ml-2 text-sm">{option.count}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredDocs.map((doc) => {
                 const config = getTypeConfig(doc.tipo);

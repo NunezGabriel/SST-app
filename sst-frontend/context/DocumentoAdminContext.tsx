@@ -27,8 +27,21 @@ export type { Documento, DocumentoUsuario } from "@/lib/api/documentos";
 
 // Función para convertir tipo del modal (lowercase) al tipo del backend (uppercase)
 const convertirTipoABackend = (
-  tipo: "procedimiento" | "instructivo" | "manual"
+  tipo:
+    | "procedimiento"
+    | "instructivo"
+    | "manual"
+    | "mapa_de_riesgos"
+    | "matriz_ambiental"
+    | "matriz_de_epps"
+    | "matriz_iperc"
+    | "plan_de_contingencia"
+    | "planes_qhse"
+    | "politica"
+    | "programas"
+    | "risst"
 ): TipoDocumento => {
+  // Convertir snake_case a UPPER_SNAKE_CASE
   return tipo.toUpperCase() as TipoDocumento;
 };
 

@@ -69,7 +69,7 @@ export const createUserRequest = async (
       tipo: data.tipo,
       contrasena: data.contrasena,
       telefono: data.telefono || null,
-      sede: data.sede || "TRUJILLO",
+      idSede: Number(data.idSede),
     };
 
     const response = await axios.post(`${API_URL}/api/usuarios`, payload, {
@@ -98,7 +98,7 @@ export const updateUserRequest = async (
       correo: data.correo,
       tipo: data.tipo,
       telefono: data.telefono || null,
-      sede: data.sede || "TRUJILLO",
+      idSede: Number(data.idSede),
     };
 
     if (data.contrasena) {

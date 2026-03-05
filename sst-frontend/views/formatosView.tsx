@@ -22,12 +22,18 @@ const iconoPorTipo = (tipo: string | null) => {
       return FileText;
     case "HSE Diarios":
       return FileBarChart;
-    case "Capacitación":
+    case "Registros Induccion":
       return FileText;
-    case "Equipos":
+    case "Registros Capacitacion":
       return FileSpreadsheet;
-    case "Permisos":
+    case "Registros Simulacros":
       return FileType;
+    case "Registros Difusion":
+        return FileText;
+    case "Entrenamiento":
+        return FileSpreadsheet;
+    case "Capacitaciones Comite":
+        return FileType;
     default:
       return FileText;
   }

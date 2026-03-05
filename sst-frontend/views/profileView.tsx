@@ -275,7 +275,7 @@ export default function ProfileView() {
                   <div>
                     <p className="text-xs text-gray-500">Sede</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {usuarioCompleto.sede}
+                      {usuarioCompleto.sede?.nombre ?? "—"}
                     </p>
                   </div>
                 </div>
@@ -352,7 +352,7 @@ export default function ProfileView() {
                             key={ul.id}
                             className={`relative rounded-2xl p-5 border transition-all duration-300 ${
                               conseguido
-                                ? "bg-gradient-to-br from-amber-50 to-yellow-100 border-amber-300 shadow-md"
+                                ? "bg-gradient-to from-amber-50 to-yellow-100 border-amber-300 shadow-md"
                                 : "bg-gray-50 border-gray-200 opacity-60"
                             }`}
                           >
@@ -360,7 +360,7 @@ export default function ProfileView() {
                             <div
                               className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
                                 conseguido
-                                  ? "bg-gradient-to-br from-amber-400 to-yellow-500 shadow-lg"
+                                  ? "bg-gradient-to from-amber-400 to-yellow-500 shadow-lg"
                                   : "bg-gray-200"
                               }`}
                             >
@@ -429,7 +429,7 @@ export default function ProfileView() {
                   <Shield className="w-5 h-5 text-[#003366]" />
                   Panel de Administración
                 </h2>
-                <div className="bg-gradient-to-r from-[#003366] to-[#4b2c82] rounded-2xl p-6 text-white">
+                <div className="bg-gradient-to from-[#003366] to-[#4b2c82] rounded-2xl p-6 text-white">
                   <div className="flex items-center gap-3 mb-4">
                     <Shield className="w-8 h-8" />
                     <h3 className="text-lg font-bold">Acceso Completo</h3>
@@ -461,9 +461,9 @@ export default function ProfileView() {
                         return (
                           <div
                             key={logro.id}
-                            className="relative rounded-2xl p-5 bg-gradient-to-br from-[#003366]/5 to-[#4b2c82]/10 border border-[#003366]/20 shadow-sm"
+                            className="relative rounded-2xl p-5 bg-gradient-to from-[#003366]/5 to-[#4b2c82]/10 border border-[#003366]/20 shadow-sm"
                           >
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#003366] to-[#4b2c82] flex items-center justify-center mb-3 shadow-md">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to from-[#003366] to-[#4b2c82] flex items-center justify-center mb-3 shadow-md">
                               <IconComponent className="w-6 h-6 text-white" />
                             </div>
                             <h3 className="font-bold text-sm text-[#022B54] mb-1">

@@ -7,33 +7,52 @@ datasource db {
 }
 
 // ============================================
-// MODELO USUARIO
+// MODELO SEDE
+// ============================================
+model Sede {
+  id                 Int        @id @default(autoincrement())
+  nombre             String     @unique @db.VarChar(100)
+  fechaCreacion      DateTime   @default(now()) @map("fecha_creacion")
+  fechaActualizacion DateTime   @updatedAt @map("fecha_actualizacion")
+  usuarios           Usuario[]
+
+  @@map("sede")
+}
+
+// ============================================
+// MODELO USUARIO (Corregido)
 // ============================================
 model Usuario {
-  id                   Int                    @id @default(autoincrement())
-  nombre               String                 @db.VarChar(100)
-  apellido             String                 @db.VarChar(100)
-  dni                  String                 @unique @db.VarChar(20)
-  correo               String                 @unique @db.VarChar(150)
-  contrasena           String                 @db.VarChar(255)
-  tipo                 TipoUsuario            @default(WORKER)
-  activo               Boolean                @default(true)
-  telefono            String?                @db.VarChar(20) 
-  sede                String                 @default("TRUJILLO") @db.VarChar(100)
-  fechaCreacion        DateTime               @default(now()) @map("fecha_creacion")
-  fechaActualizacion   DateTime               @updatedAt @map("fecha_actualizacion")
+  id                 Int                    @id @default(autoincrement())
+  nombre             String                 @db.VarChar(100)
+  apellido           String                 @db.VarChar(100)
+  dni                String                 @unique @db.VarChar(20)
+  correo             String                 @unique @db.VarChar(150)
+  contrasena         String                 @db.VarChar(255)
+  tipo               TipoUsuario            @default(WORKER)
+  activo             Boolean                @default(true)
+  telefono           String?                @db.VarChar(20)
   
-  // Relaciones
-  progresosCharlas     ProgresoCharla[]
-  visualizaciones      VisualizacionDocumento[]
-  logros               UsuarioLogro[]
-  notificaciones       Notificacion[]
-  intentosExamen       IntentoExamen[]
-  bloqueoExamen        BloqueoExamen?
+  // 1. EL CAMPO DE RELACIÓN (ID) - Ponlo como opcional ? para la migración
+  idSede             Int?                   @map("id_sede")
+  
+  fechaCreacion      DateTime               @default(now()) @map("fecha_creacion")
+  fechaActualizacion DateTime               @updatedAt @map("fecha_actualizacion")
+  
+  // 2. LA RELACIÓN (Objeto) - Aquí ya no hay duplicado
+  sede               Sede?                  @relation(fields: [idSede], references: [id])
+
+  progresosCharlas   ProgresoCharla[]
+  visualizaciones    VisualizacionDocumento[]
+  logros             UsuarioLogro[]
+  notificaciones     Notificacion[]
+  intentosExamen     IntentoExamen[]
+  bloqueoExamen      BloqueoExamen?
   
   @@map("usuario")
 }
 
+// ASEGÚRATE DE QUE ESTO ESTÉ AL FINAL O CERCA DEL MODELO
 enum TipoUsuario {
   ADMIN
   WORKER

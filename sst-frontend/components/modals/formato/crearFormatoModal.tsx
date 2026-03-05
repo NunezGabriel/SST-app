@@ -10,7 +10,7 @@ interface CreateFormatoModalProps {
   onCreate: (data: FormatoFormData) => void;
 }
 
-const TIPOS_FORMATO = ["Inspección", "CheckList", "HSE Diarios"];
+const TIPOS_FORMATO = ["Inspección", "CheckList", "HSE Diarios", "Registros Induccion", "Registros Capacitacion", "Registros Simulacros", "Registros Difusion", "Entrenamiento", "Capacitaciones Comite"];
 
 const CreateFormatoModal: React.FC<CreateFormatoModalProps> = ({
   open,

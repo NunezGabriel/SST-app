@@ -26,16 +26,17 @@ async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
 
   if (rol === "ADMIN") {
     const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-  
-    // 1. Crear Admin y mes UNA VEZ, en secuencia
+
+    // Crear Admin y mes UNA SOLA VEZ antes del paralelo
+    // así las 5 sedes comparten la misma carpeta Admin/mes
     const adminId = await driveRepository.obtenerOCrearCarpeta(carpetaRol, ROOT);
     const mesId   = await driveRepository.obtenerOCrearCarpeta(mes, adminId);
-  
-    // 2. Ahora sí en paralelo — cada sede parte de mesId ya existente
+
+    // Ahora subir a cada sede en paralelo usando mesId ya existente
     const resultados = await Promise.all(
       BRIGADAS.map(async (sede) => {
-        const sedeId = await driveRepository.obtenerOCrearCarpeta(sede, mesId);
-        const tipoId = await driveRepository.obtenerOCrearCarpeta(tipoDoc, sedeId);
+        const sedeId   = await driveRepository.obtenerOCrearCarpeta(sede, mesId);
+        const tipoId   = await driveRepository.obtenerOCrearCarpeta(tipoDoc, sedeId);
         return driveRepository.subirArchivoEnCarpeta({
           buffer:       file.buffer,
           mimetype:     file.mimetype,
@@ -47,10 +48,10 @@ async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
     return resultados[0];
   }
 
-  // WORKER
+  // WORKER: Worker / mes / brigada / semana / tipoDoc
   const rutaCarpetas = semana
-    ? [carpetaRol, brigada, mes, semana, tipoDoc]
-    : [carpetaRol, brigada, mes, tipoDoc]; // capacitación mensual sin semana
+    ? [carpetaRol, mes, brigada, semana, tipoDoc]
+    : [carpetaRol, mes, brigada, tipoDoc]; // capacitación mensual sin semana
 
   return driveRepository.subirArchivo({
     buffer:       file.buffer,
@@ -98,8 +99,8 @@ async function listarPorRuta({ rol, brigada, mes, semana, tipoDoc }) {
   const ruta = rol === "ADMIN"
     ? [carpetaRol, mes, brigada, tipoDoc]
     : semana
-      ? [carpetaRol, brigada, mes, semana, tipoDoc]
-      : [carpetaRol, brigada, mes, tipoDoc];
+      ? [carpetaRol, mes, brigada, semana, tipoDoc]
+      : [carpetaRol, mes, brigada, tipoDoc];
 
   let parentId = ROOT;
   for (const nombre of ruta) {

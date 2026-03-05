@@ -188,7 +188,7 @@ const ArchivoModal = ({
     }
   };
 
-  // Al abrir con tipoFijo → cargar archivos + abrir picker
+  // Al abrir con tipoFijo → cargar archivos (sin abrir picker automáticamente)
   useEffect(() => {
     if (!isOpen || !tipoFijo) return;
     const doc = { label: tipoFijo, icon: GraduationCap, color: "amber" };
@@ -197,8 +197,6 @@ const ArchivoModal = ({
     setErrorMsg("");
     setUploadedFiles([]);
     fetchCurrentFiles(tipoFijo);
-    const t = setTimeout(() => fileInputRef.current?.click(), 150);
-    return () => clearTimeout(t);
   }, [isOpen, tipoFijo]);
 
   // Reset al cerrar
@@ -220,7 +218,7 @@ const ArchivoModal = ({
     setErrorMsg("");
     setUploadedFiles([]);
     fetchCurrentFiles(opt.label);
-    fileInputRef.current?.click();
+    // NO abrimos el picker aquí — el usuario lo hace con el botón "Subir archivo"
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -390,16 +388,19 @@ const ArchivoModal = ({
             {/* ── Idle: doc seleccionado → mostrar archivos + botón subir ── */}
             {uploadStatus === "idle" && !tipoFijo && selectedDoc && (
               <>
-                <button onClick={() => { setSelectedDoc(null); setCurrentFiles([]); }}
-                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors self-start"
-                >
-                  ← Volver a tipos de documento
-                </button>
+                {/* Cabecera del doc seleccionado */}
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${COLOR_MAP[selectedDoc.color].border} ${COLOR_MAP[selectedDoc.color].bg}`}>
+                  <div className={`w-8 h-8 rounded-lg ${COLOR_MAP[selectedDoc.color].iconBg} flex items-center justify-center shrink-0`}>
+                    <selectedDoc.icon size={16} className={COLOR_MAP[selectedDoc.color].text} />
+                  </div>
+                  <span className={`text-sm font-bold ${COLOR_MAP[selectedDoc.color].text}`}>{selectedDoc.label}</span>
+                </div>
 
+                {/* Archivos actuales */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Archivos en {selectedDoc.label}
+                      Archivos en esta carpeta
                     </p>
                     <button onClick={() => fetchCurrentFiles(selectedDoc.label)} className="text-gray-300 hover:text-gray-500 transition-colors">
                       <RefreshCw size={12} />
@@ -408,13 +409,22 @@ const ArchivoModal = ({
                   <ArchivosActuales files={currentFiles} isLoading={loadingFiles} token={user?.token ?? ""} onDeleted={handleFileDeleted} />
                 </div>
 
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors border ${COLOR_MAP[selectedDoc.color].border} ${COLOR_MAP[selectedDoc.color].bg} ${COLOR_MAP[selectedDoc.color].hover} ${COLOR_MAP[selectedDoc.color].text}`}
-                >
-                  <Upload size={15} />
-                  Subir archivos a {selectedDoc.label}
-                </button>
+                {/* Acciones */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => { setSelectedDoc(null); setCurrentFiles([]); }}
+                    className="flex-1 py-2.5 text-sm font-semibold bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors border ${COLOR_MAP[selectedDoc.color].border} ${COLOR_MAP[selectedDoc.color].bg} ${COLOR_MAP[selectedDoc.color].hover} ${COLOR_MAP[selectedDoc.color].text}`}
+                  >
+                    <Upload size={14} />
+                    Subir archivo
+                  </button>
+                </div>
               </>
             )}
 

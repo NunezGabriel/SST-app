@@ -12,17 +12,13 @@ const upload = multer({
 });
 
 router.get("/estado-mes", authMiddleware, driveController.getEstadoMes);
+router.get("/carpeta-ruta", authMiddleware, driveController.listarPorRuta);
 
 // GET  /api/drive?folderId=xxx
 router.get("/", authMiddleware, driveController.listarArchivos);
 
 // POST /api/drive/upload  (multipart/form-data)
-router.post(
-  "/upload",
-  authMiddleware,
-  upload.single("file"),
-  driveController.subirArchivo,
-);
+router.post("/upload", authMiddleware, upload.array("files", 10), driveController.subirArchivo);
 
 // POST /api/drive/carpeta
 router.post("/carpeta", authMiddleware, driveController.crearCarpeta);

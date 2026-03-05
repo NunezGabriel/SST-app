@@ -85,6 +85,24 @@ async function getEstadoMes(mes, rol) {
   });
 }
 
+async function listarPorRuta({ rol, brigada, mes, semana, tipoDoc }) {
+  const carpetaRol = ROL_CARPETA[rol] || rol;
+  const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  
+  // Navegar carpeta por carpeta hasta llegar al tipoDoc
+  const ruta = semana
+    ? [carpetaRol, brigada, mes, semana, tipoDoc]
+    : [carpetaRol, brigada, mes, tipoDoc];
+
+  let parentId = ROOT;
+  for (const nombre of ruta) {
+    const id = await driveRepository.buscarCarpeta(nombre, parentId);
+    if (!id) return []; // carpeta no existe aún
+    parentId = id;
+  }
+  return driveRepository.listarArchivos(parentId);
+}
+
 // Actualizar module.exports:
 // module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes };
 
@@ -94,4 +112,5 @@ module.exports = {
   crearCarpeta,
   eliminar,
   getEstadoMes,
+  listarPorRuta,
 };

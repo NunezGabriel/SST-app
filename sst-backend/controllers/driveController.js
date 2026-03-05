@@ -22,7 +22,7 @@ async function listarArchivos(req, res) {
 //   tipoDoc  → "ATS - Charla 5 min"
 async function subirArchivo(req, res) {
   try {
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: "No se recibió ningún archivo" });
     }
 
@@ -31,21 +31,18 @@ async function subirArchivo(req, res) {
     if (!rol || !brigada || !mes || !tipoDoc) {
       return res
         .status(400)
-        .json({ error: "Faltan datos: rol, brigada, mes, semana, tipoDoc" });
+        .json({ error: "Faltan datos: rol, brigada, mes, tipoDoc" });
     }
 
-    const resultado = await driveService.subirArchivo({
-      file: req.file,
-      rol,
-      brigada,
-      mes,
-      semana,
-      tipoDoc,
-    });
+    const resultados = await Promise.all(
+      req.files.map((file) =>
+        driveService.subirArchivo({ file, rol, brigada, mes, semana, tipoDoc })
+      )
+    );
 
     res.json({
-      message: "Archivo subido correctamente",
-      archivo: resultado,
+      message: "Archivos subidos correctamente",
+      archivos: resultados,
     });
   } catch (error) {
     console.error("Error al subir archivo a Drive:", error);
@@ -97,6 +94,18 @@ async function getEstadoMes(req, res) {
   }
 }
 
+// GET /api/drive/carpeta-ruta?rol=WORKER&brigada=CHICLAYO&mes=Marzo&semana=01 al 07 de Marzo&tipoDoc=ATS - Charla 5 min
+async function listarPorRuta(req, res) {
+  try {
+    const { rol, brigada, mes, semana, tipoDoc } = req.query;
+    const archivos = await driveService.listarPorRuta({ rol, brigada, mes, semana, tipoDoc });
+    res.json({ files: archivos });
+  } catch (error) {
+    console.error("Error al listar carpeta por ruta:", error.message);
+    res.status(500).json({ error: "Error al listar carpeta por ruta" });
+  }
+}
+
 // module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes };
 
 // ─── AGREGAR a driveRoutes.js ─────────────────────────────────────────────────
@@ -111,4 +120,5 @@ module.exports = {
   crearCarpeta,
   eliminar,
   getEstadoMes,
+  listarPorRuta,
 };

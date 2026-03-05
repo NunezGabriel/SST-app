@@ -194,4 +194,5 @@ module.exports = {
   crearCarpeta,
   eliminar,
   getEstadoMes,
+  buscarCarpeta,
 };

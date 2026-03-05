@@ -8,10 +8,11 @@ export interface DriveFile {
   mimeType: string;
   webViewLink: string;
   modifiedTime?: string;
+  size?: string;
 }
 
 export interface UploadParams {
-  file: File;
+  files: File[];               // ← array (antes era file: File)
   rol: "WORKER" | "ADMIN";
   brigada: string;
   mes: string;
@@ -21,10 +22,18 @@ export interface UploadParams {
 
 export interface UploadResponse {
   message: string;
-  archivo: { id: string; name: string; webViewLink: string };
+  archivos: { id: string; name: string; webViewLink: string }[];
 }
 
-// ✅ Listar archivos de una carpeta de Drive
+export interface RouteParams {
+  rol: string;
+  brigada: string;
+  mes: string;
+  semana: string;   // vacío para capacitación mensual
+  tipoDoc: string;
+}
+
+// ✅ Listar archivos/carpetas por folderId (usado en GestionarCarpetaView)
 export const getDriveFilesRequest = async (
   token: string,
   folderId?: string,
@@ -36,37 +45,46 @@ export const getDriveFilesRequest = async (
     });
     return response.data;
   } catch (error: any) {
-    const message =
-      error.response?.data?.message || error.response?.data?.error;
-    throw new Error(message || "Error al obtener archivos de Drive.");
+    throw new Error(error.response?.data?.error || "Error al obtener archivos de Drive.");
   }
 };
 
-// ✅ Subir archivo a Drive
+// ✅ Listar archivos por ruta lógica (usado en ArchivoModal)
+// Ej: rol=WORKER, brigada=CHICLAYO, mes=Marzo, semana=01 al 07 de Marzo, tipoDoc=ATS - Charla 5 min
+export const getFilesByRouteRequest = async (
+  token: string,
+  params: RouteParams,
+): Promise<{ files: DriveFile[] }> => {
+  try {
+    const response = await axios.get(`${API_URL}/api/drive/carpeta-ruta`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || "Error al listar archivos.");
+  }
+};
+
+// ✅ Subir archivos a Drive (múltiples)
 export const uploadDriveFileRequest = async (
   token: string,
   params: UploadParams,
 ): Promise<UploadResponse> => {
   try {
     const formData = new FormData();
-    formData.append("file", params.file);
-    formData.append("rol", params.rol);
+    params.files.forEach((f) => formData.append("files", f));  // ← "files" plural
+    formData.append("rol",     params.rol);
     formData.append("brigada", params.brigada);
-    formData.append("mes", params.mes);
-    formData.append("semana", params.semana);
+    formData.append("mes",     params.mes);
+    formData.append("semana",  params.semana);
     formData.append("tipoDoc", params.tipoDoc);
-
     const response = await axios.post(`${API_URL}/api/drive/upload`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
     });
     return response.data;
   } catch (error: any) {
-    const message =
-      error.response?.data?.message || error.response?.data?.error;
-    throw new Error(message || "Error al subir el archivo.");
+    throw new Error(error.response?.data?.error || "Error al subir el archivo.");
   }
 };
 
@@ -84,8 +102,7 @@ export const createDriveFolderRequest = async (
     );
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.error;
-    throw new Error(message || "Error al crear la carpeta.");
+    throw new Error(error.response?.data?.error || "Error al crear la carpeta.");
   }
 };
 
@@ -99,7 +116,6 @@ export const deleteDriveItemRequest = async (
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch (error: any) {
-    const message = error.response?.data?.error;
-    throw new Error(message || "Error al eliminar.");
+    throw new Error(error.response?.data?.error || "Error al eliminar.");
   }
 };

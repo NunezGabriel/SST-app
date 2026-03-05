@@ -164,10 +164,12 @@ const UserAdminView = () => {
                       <div>
                         <p className="font-semibold text-gray-900">{u.nombre} {u.apellido}</p>
                         <p className="text-xs text-gray-400">{u.correo}</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-300" />
-                          {u.sedNombre}
-                        </p>
+                        {u.tipo !== "ADMIN" && (
+                          <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-300" />
+                            {u.sedNombre}
+                          </p>
+                        )}
                         {u.telefono && (
                           <p className="text-xs text-gray-400 flex items-center gap-1">
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-300" />

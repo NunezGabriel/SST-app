@@ -78,6 +78,19 @@ async function subirArchivo({ buffer, mimetype, originalname, rutaCarpetas }) {
   return archivo.data;
 }
 
+// ─── Subir archivo directamente en una carpeta ya conocida (por ID) ──────────
+async function subirArchivoEnCarpeta({ buffer, mimetype, originalname, parentId }) {
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+  const archivo = await drive.files.create({
+    requestBody: { name: originalname, parents: [parentId] },
+    media: { mimeType: mimetype, body: stream },
+    fields: "id, name, webViewLink",
+  });
+  return archivo.data;
+}
+
 // ─── Crear carpeta manualmente desde la UI ───────────────────────────────────
 async function crearCarpeta(nombre, parentId) {
   const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
@@ -195,4 +208,6 @@ module.exports = {
   eliminar,
   getEstadoMes,
   buscarCarpeta,
+  subirArchivoEnCarpeta,
+  obtenerOCrearCarpeta,
 };

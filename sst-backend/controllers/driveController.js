@@ -7,45 +7,32 @@ async function listarArchivos(req, res) {
     const archivos = await driveService.listarArchivos(folderId);
     res.json({ files: archivos });
   } catch (error) {
-    console.error("Error al listar archivos de Drive:", error);
+    console.error("Error al listar archivos de Drive:", error.message);
     res.status(500).json({ error: "Error al listar archivos de Drive" });
   }
 }
 
-// POST /api/drive/upload
-// Body (multipart/form-data):
-//   file     → archivo binario
-//   rol      → "WORKER" | "ADMIN"
-//   brigada  → "Chiclayo"
-//   mes      → "Octubre"
-//   semana   → "01 al 07 de Octubre"
-//   tipoDoc  → "ATS - Charla 5 min"
+// POST /api/drive/upload  (multipart/form-data, campo "files" array)
 async function subirArchivo(req, res) {
   try {
-    if (!req.files || req.files.length === 0) {
+    if (!req.files || req.files.length === 0)
       return res.status(400).json({ error: "No se recibió ningún archivo" });
-    }
 
     const { rol, brigada, mes, semana, tipoDoc } = req.body;
+    if (!rol || !mes || !tipoDoc)
+      return res.status(400).json({ error: "Faltan datos: rol, mes, tipoDoc" });
 
-    if (!rol || !brigada || !mes || !tipoDoc) {
-      return res
-        .status(400)
-        .json({ error: "Faltan datos: rol, brigada, mes, tipoDoc" });
+    // Para ADMIN: subir cada archivo secuencialmente para evitar race condition
+    // en la creación de carpetas (Admin / mes se comparten entre sedes)
+    const resultados = [];
+    for (const file of req.files) {
+      const r = await driveService.subirArchivo({ file, rol, brigada, mes, semana, tipoDoc });
+      resultados.push(r);
     }
 
-    const resultados = await Promise.all(
-      req.files.map((file) =>
-        driveService.subirArchivo({ file, rol, brigada, mes, semana, tipoDoc })
-      )
-    );
-
-    res.json({
-      message: "Archivos subidos correctamente",
-      archivos: resultados,
-    });
+    res.json({ message: "Archivos subidos correctamente", archivos: resultados });
   } catch (error) {
-    console.error("Error al subir archivo a Drive:", error);
+    console.error("Error al subir archivo a Drive:", error.message);
     res.status(500).json({ error: "Error al subir archivo a Drive" });
   }
 }
@@ -54,14 +41,11 @@ async function subirArchivo(req, res) {
 async function crearCarpeta(req, res) {
   try {
     const { nombre, parentId } = req.body;
-    if (!nombre)
-      return res
-        .status(400)
-        .json({ error: "El nombre de la carpeta es requerido" });
+    if (!nombre) return res.status(400).json({ error: "El nombre de la carpeta es requerido" });
     const carpeta = await driveService.crearCarpeta(nombre, parentId);
     res.json({ message: "Carpeta creada correctamente", carpeta });
   } catch (error) {
-    console.error("Error al crear carpeta en Drive:", error);
+    console.error("Error al crear carpeta en Drive:", error.message);
     res.status(500).json({ error: "Error al crear carpeta en Drive" });
   }
 }
@@ -73,12 +57,10 @@ async function eliminar(req, res) {
     await driveService.eliminar(fileId);
     res.json({ message: "Eliminado correctamente" });
   } catch (error) {
-    console.error("Error al eliminar de Drive:", error);
+    console.error("Error al eliminar de Drive:", error.message);
     res.status(500).json({ error: "Error al eliminar de Drive" });
   }
 }
-
-// ─── AGREGAR al driveController.js ───────────────────────────────────────────
 
 // GET /api/drive/estado-mes?mes=Marzo&rol=WORKER
 async function getEstadoMes(req, res) {
@@ -94,7 +76,7 @@ async function getEstadoMes(req, res) {
   }
 }
 
-// GET /api/drive/carpeta-ruta?rol=WORKER&brigada=CHICLAYO&mes=Marzo&semana=01 al 07 de Marzo&tipoDoc=ATS - Charla 5 min
+// GET /api/drive/carpeta-ruta?rol=WORKER&brigada=CHICLAYO&mes=Marzo&semana=...&tipoDoc=...
 async function listarPorRuta(req, res) {
   try {
     const { rol, brigada, mes, semana, tipoDoc } = req.query;
@@ -106,19 +88,4 @@ async function listarPorRuta(req, res) {
   }
 }
 
-// module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes };
-
-// ─── AGREGAR a driveRoutes.js ─────────────────────────────────────────────────
-// IMPORTANTE: esta ruta debe ir ANTES de router.get("/") para evitar conflictos
-
-// GET /api/drive/estado-mes?mes=Marzo&rol=WORKER
-// router.get("/estado-mes", authMiddleware, driveController.getEstadoMes);
-
-module.exports = {
-  listarArchivos,
-  subirArchivo,
-  crearCarpeta,
-  eliminar,
-  getEstadoMes,
-  listarPorRuta,
-};
+module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes, listarPorRuta };

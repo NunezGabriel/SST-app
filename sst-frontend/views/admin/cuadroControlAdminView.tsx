@@ -89,7 +89,7 @@ const ShareButton = ({ monthName, rol, accentColor, token }: {
         : error  ? <XCircle size={12} />
         : link   ? <ExternalLink size={12} />
         :           <Share2 size={12} />}
-      {error ? "No encontrada" : "Compartir carpeta"}
+      {error ? "No encontrada" : "Acceso a Drive"}
     </button>
   );
 };

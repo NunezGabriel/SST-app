@@ -1,13 +1,27 @@
 const usuarioService = require("../services/usuarioService");
 
+// Helper para traducir errores de Prisma a mensajes legibles
+function parsearErrorPrisma(error) {
+  if (error.code === "P2002") {
+    const campo = error.meta?.target?.[0];
+    if (campo === "dni")    return "El DNI ingresado ya está registrado.";
+    if (campo === "correo") return "El correo ingresado ya está en uso.";
+    return "Ya existe un usuario con ese dato único.";
+  }
+  if (error.code === "P2003") return "La sede seleccionada no existe.";
+  if (error.message)          return error.message;
+  return "Error al crear usuario.";
+}
+
 async function crearUsuario(req, res) {
   try {
-    const { nombre, apellido, dni, correo, contrasena, tipo, telefono, sede } = req.body;
+    const { nombre, apellido, dni, correo, contrasena, tipo, telefono, idSede } = req.body;
 
     if (!nombre || !apellido || !dni || !correo || !contrasena) {
-      return res
-        .status(400)
-        .json({ error: "Faltan datos obligatorios para crear el usuario" });
+      return res.status(400).json({ error: "Faltan datos obligatorios para crear el usuario" });
+    }
+    if (!idSede) {
+      return res.status(400).json({ error: "Debes seleccionar una sede." });
     }
 
     const nuevoUsuario = await usuarioService.crearUsuarioConAsignaciones({
@@ -18,13 +32,14 @@ async function crearUsuario(req, res) {
       contrasena,
       tipo,
       telefono,
-      sede,
+      idSede: Number(idSede),   // ← FK correcta
     });
 
     res.status(201).json(nuevoUsuario);
   } catch (error) {
     console.error("Error al crear usuario:", error);
-    res.status(500).json({ error: "Error al crear usuario" });
+    const mensaje = parsearErrorPrisma(error);
+    res.status(400).json({ error: mensaje });
   }
 }
 
@@ -52,9 +67,7 @@ async function obtenerUsuario(req, res) {
   try {
     const id = Number(req.params.id);
     const usuario = await usuarioService.obtenerUsuarioPorId(id);
-    if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
+    if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
     res.json(usuario);
   } catch (error) {
     console.error("Error al obtener usuario:", error);
@@ -64,24 +77,22 @@ async function obtenerUsuario(req, res) {
 
 async function actualizarUsuario(req, res) {
   try {
-    const id = Number(req.params.id);
+    const id   = Number(req.params.id);
     const data = req.body;
+    if (data.idSede) data.idSede = Number(data.idSede);
 
-    const usuarioActualizado = await usuarioService.actualizarUsuario(
-      id,
-      data
-    );
+    const usuarioActualizado = await usuarioService.actualizarUsuario(id, data);
     res.json(usuarioActualizado);
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
-    res.status(500).json({ error: "Error al actualizar usuario" });
+    const mensaje = parsearErrorPrisma(error);
+    res.status(400).json({ error: mensaje });
   }
 }
 
 async function desactivarUsuario(req, res) {
   try {
-    const id = Number(req.params.id);
-    await usuarioService.desactivarUsuario(id);
+    await usuarioService.desactivarUsuario(Number(req.params.id));
     res.status(204).send();
   } catch (error) {
     console.error("Error al desactivar usuario:", error);
@@ -91,8 +102,7 @@ async function desactivarUsuario(req, res) {
 
 async function activarUsuario(req, res) {
   try {
-    const id = Number(req.params.id);
-    await usuarioService.activarUsuario(id);
+    await usuarioService.activarUsuario(Number(req.params.id));
     res.status(204).send();
   } catch (error) {
     console.error("Error al activar usuario:", error);
@@ -102,8 +112,7 @@ async function activarUsuario(req, res) {
 
 async function eliminarUsuario(req, res) {
   try {
-    const id = Number(req.params.id);
-    await usuarioService.eliminarUsuario(id);
+    await usuarioService.eliminarUsuario(Number(req.params.id));
     res.status(204).send();
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
@@ -121,4 +130,3 @@ module.exports = {
   activarUsuario,
   eliminarUsuario,
 };
-

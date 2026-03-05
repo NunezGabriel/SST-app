@@ -154,6 +154,7 @@ const isWeekLocked = (i: number, d: number) => {
   return d > currentDay;
 };
 
+
 // Nombre del tipoDoc que se usará como carpeta en Drive para la capacitación mensual
 const TIPO_CAPACITACION = "Capacitación Mensual";
 
@@ -166,6 +167,7 @@ const RegistroView = () => {
   const [modalTipoFijo, setModalTipoFijo] = useState<string | undefined>(
     undefined,
   );
+  
 
   const handleWeekClick = (label: string, locked: boolean) => {
     if (locked) return;
@@ -271,89 +273,94 @@ const RegistroView = () => {
         )}
 
         {/* — NIVEL 2: Semanas + Capacitación mensual — */}
-        {selectedMonth && (
-          <>
-            <div className="mb-8">
-              <button
-                onClick={() => setSelectedMonth(null)}
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-5"
-              >
-                <ChevronLeft size={16} /> Volver a meses
-              </button>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                {selectedMonth.name}
-              </h1>
-              <p className="text-gray-600">
-                Selecciona la semana para subir los documentos
-              </p>
-            </div>
+        {selectedMonth && (() => {
+  const capacitacionBloqueada = selectedMonth.monthIndex === 0 || selectedMonth.monthIndex === 1;
+  return (
+    <>
+      <div className="mb-8">
+        <button
+          onClick={() => setSelectedMonth(null)}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-5"
+        >
+          <ChevronLeft size={16} /> Volver a meses
+        </button>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          {selectedMonth.name}
+        </h1>
+        <p className="text-gray-600">
+          Selecciona la semana para subir los documentos
+        </p>
+      </div>
 
-            {/* Capacitación mensual — ahora abre el modal con tipoFijo */}
-            <div className="mb-6">
-              <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3">
-                Documento mensual
-              </p>
-              <button
-                onClick={handleCapacitacion}
-                className="bg-amber-50 border border-amber-200 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-400 hover:bg-amber-100 transition-all duration-200 p-5 flex items-center gap-4 group w-full sm:w-auto"
-              >
-                <div className="w-12 h-12 rounded-full bg-amber-100 group-hover:bg-amber-500 flex items-center justify-center transition-colors shrink-0">
-                  <GraduationCap
-                    size={20}
-                    className="text-amber-500 group-hover:text-white transition-colors"
-                  />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold text-amber-700">
-                    Subir Capacitación Mensual
-                  </p>
-                  <p className="text-xs text-amber-400 mt-0.5">
-                    {selectedMonth.name} — Click para seleccionar archivo
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-              Documentos semanales
+      {/* Capacitación mensual */}
+      <div className="mb-6">
+        <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3">
+          Documento mensual
+        </p>
+        <button
+          onClick={handleCapacitacion}
+          disabled={capacitacionBloqueada}
+          className={`rounded-2xl border shadow-sm transition-all duration-200 p-5 flex items-center gap-4 group w-full sm:w-auto ${
+            capacitacionBloqueada
+              ? "bg-gray-100 border-gray-100 cursor-not-allowed opacity-40"
+              : "bg-amber-50 border-amber-200 hover:shadow-md hover:border-amber-400 hover:bg-amber-100 cursor-pointer"
+          }`}
+        >
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+            capacitacionBloqueada ? "bg-gray-200" : "bg-amber-100 group-hover:bg-amber-500"
+          }`}>
+            {capacitacionBloqueada
+              ? <Lock size={20} className="text-gray-400" />
+              : <GraduationCap size={20} className="text-amber-500 group-hover:text-white transition-colors" />
+            }
+          </div>
+          <div className="text-left">
+            <p className={`text-sm font-bold ${capacitacionBloqueada ? "text-gray-400" : "text-amber-700"}`}>
+              {capacitacionBloqueada ? "No disponible este mes" : "Subir Capacitación Mensual"}
             </p>
+            <p className={`text-xs mt-0.5 ${capacitacionBloqueada ? "text-gray-400" : "text-amber-400"}`}>
+              {capacitacionBloqueada
+                ? "Enero y Febrero no requieren capacitación mensual"
+                : `${selectedMonth.name} — Click para seleccionar archivo`}
+            </p>
+          </div>
+        </button>
+      </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {selectedMonth.weeks.map((week) => {
-                const locked = isWeekLocked(
-                  selectedMonth.monthIndex,
-                  week.startDay,
-                );
-                return (
-                  <button
-                    key={week.label}
-                    onClick={() => handleWeekClick(week.label, locked)}
-                    disabled={locked}
-                    className={`rounded-2xl border shadow-sm transition-all duration-200 p-6 flex flex-col items-center gap-3 group ${locked ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40" : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"}`}
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"}`}
-                    >
-                      {locked ? (
-                        <Lock size={16} className="text-gray-500" />
-                      ) : (
-                        <CalendarDays
-                          size={20}
-                          className="text-cyan-500 group-hover:text-white transition-colors"
-                        />
-                      )}
-                    </div>
-                    <span
-                      className={`text-sm font-semibold text-center leading-snug ${locked ? "text-gray-500" : "text-gray-800"}`}
-                    >
-                      {week.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
+      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+        Documentos semanales
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {selectedMonth.weeks.map((week) => {
+          const locked = isWeekLocked(selectedMonth.monthIndex, week.startDay);
+          return (
+            <button
+              key={week.label}
+              onClick={() => handleWeekClick(week.label, locked)}
+              disabled={locked}
+              className={`rounded-2xl border shadow-sm transition-all duration-200 p-6 flex flex-col items-center gap-3 group ${
+                locked ? "bg-gray-200 border-gray-100 cursor-not-allowed opacity-40" : "bg-white border-gray-100 hover:shadow-md hover:border-cyan-300 cursor-pointer"
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                locked ? "bg-gray-200" : "bg-cyan-50 group-hover:bg-cyan-500"
+              }`}>
+                {locked
+                  ? <Lock size={16} className="text-gray-500" />
+                  : <CalendarDays size={20} className="text-cyan-500 group-hover:text-white transition-colors" />
+                }
+              </div>
+              <span className={`text-sm font-semibold text-center leading-snug ${locked ? "text-gray-500" : "text-gray-800"}`}>
+                {week.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+})()}
       </div>
 
       {/* Modal — tipoFijo activa el modo capacitación directa */}

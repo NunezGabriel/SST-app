@@ -5,13 +5,13 @@ import LayoutComponent from "@/components/layoutComponent";
 import { useAuthContext } from "@/context/AuthContext";
 import { CheckCircle2, XCircle, Lock, Loader2, Users, ShieldCheck, Share2, ExternalLink } from "lucide-react";
 import axios from "axios";
+import { getSedesRequest, type Sede } from "@/lib/api/sedes";
 
 const API_URL = "http://localhost:8080";
 
 type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO" | "CARGANDO";
 type Vista   = "WORKER" | "ADMIN";
 
-const BRIGADAS    = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
 const MONTHS      = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const SEMANAS     = (m: string) => [`01 al 07 de ${m}`,`08 al 14 de ${m}`,`15 al 21 de ${m}`,`22 al 31 de ${m}`];
 const WORKER_DOCS = ["Licencia / SOAT / Bitácora","Control de Salud Diario","ATS - Charla 5 min"];
@@ -51,15 +51,16 @@ const EstadoCell = ({ estado }: { estado: Estado }) => {
 };
 
 // ─── Botón compartir ──────────────────────────────────────────────────────────
-const ShareButton = ({ monthName, rol, accentColor, token }: { monthName: string; rol: Vista; accentColor: string; token: string }) => {
+const ShareButton = ({ monthName, rol, accentColor, token }: {
+  monthName: string; rol: Vista; accentColor: string; token: string;
+}) => {
   const [loading, setLoading] = useState(false);
   const [link,    setLink]    = useState<string | null>(null);
   const [error,   setError]   = useState(false);
 
   const handleShare = async () => {
     if (link) { window.open(link, "_blank"); return; }
-    setLoading(true);
-    setError(false);
+    setLoading(true); setError(false);
     try {
       const res = await axios.get(`${API_URL}/api/drive/link-mes`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -84,17 +85,18 @@ const ShareButton = ({ monthName, rol, accentColor, token }: { monthName: string
     <button onClick={handleShare} disabled={loading} title="Abrir carpeta del mes en Drive"
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${baseClass}`}
     >
-      {loading ? <Loader2 size={12} className="animate-spin" /> : error ? <XCircle size={12} /> : link ? <ExternalLink size={12} /> : <Share2 size={12} />}
+      {loading ? <Loader2 size={12} className="animate-spin" />
+        : error  ? <XCircle size={12} />
+        : link   ? <ExternalLink size={12} />
+        :           <Share2 size={12} />}
       {error ? "No encontrada" : "Compartir carpeta"}
     </button>
   );
 };
 
 // ─── Tabla genérica ───────────────────────────────────────────────────────────
-const MonthTable = ({
-  monthName, monthIndex, rol, token, docs, conMensual, accentClass,
-}: {
-  monthName: string; monthIndex: number; rol: Vista; token: string;
+const MonthTable = ({ monthName, monthIndex, rol, token, sedes, docs, conMensual, accentClass }: {
+  monthName: string; monthIndex: number; rol: Vista; token: string; sedes: Sede[];
   docs: string[]; conMensual: boolean;
   accentClass: { header: string; subheader: string; mensual: string; brigCell: string; badge: string; badgeText: string; shareColor: string };
 }) => {
@@ -116,12 +118,14 @@ const MonthTable = ({
       .finally(() => setIsLoading(false));
   }, [monthName, rol, locked, token]);
 
-  const getEstado = (brigada: string, key: string): Estado => {
+  const getEstado = (sedNombre: string, key: string): Estado => {
     if (locked) return "BLOQUEADO";
+    if (key === "mensual" && (monthIndex === 0 || monthIndex === 1)) return "BLOQUEADO";
     if (isLoading || !estadoMes) return "CARGANDO";
-    // ADMIN usa key "completo", WORKER usa la semana o "mensual"
-    return estadoMes[brigada]?.[key] ? "COMPLETO" : "FALTA";
+    return estadoMes[sedNombre.toUpperCase()]?.[key] ? "COMPLETO" : "FALTA";
   };
+
+  if (sedes.length === 0) return null;
 
   return (
     <div className={`mb-8 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}>
@@ -143,23 +147,18 @@ const MonthTable = ({
           <thead>
             <tr>
               <th className={`px-4 py-2.5 text-left font-bold text-white ${accentClass.header} border-r border-opacity-30 whitespace-nowrap min-w-[130px]`}>
-                BRIGADA
+                SEDE
               </th>
-
-              {/* WORKER: columnas por semana */}
               {rol === "WORKER" && semanas.map((sem, i) => (
                 <th key={i} className={`px-3 py-2.5 text-center font-semibold text-white ${accentClass.subheader} border-r border-opacity-20 whitespace-nowrap w-28 text-[10px] leading-tight`}>
                   {sem}
                 </th>
               ))}
-
-              {/* ADMIN: una sola columna "Estado del mes" */}
               {rol === "ADMIN" && (
                 <th className={`px-3 py-2.5 text-center font-semibold text-white ${accentClass.subheader} whitespace-nowrap w-40 text-[10px] leading-tight`}>
                   Estado del mes
                 </th>
               )}
-
               {conMensual && (
                 <th className={`px-3 py-2.5 text-center font-semibold text-white ${accentClass.mensual} whitespace-nowrap w-28 text-[10px] leading-tight`}>
                   Capacitación<br />Mensual
@@ -168,23 +167,18 @@ const MonthTable = ({
             </tr>
           </thead>
           <tbody>
-            {BRIGADAS.map((brigada, bIdx) => (
-              <tr key={brigada} className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}>
+            {sedes.map((sede, bIdx) => (
+              <tr key={sede.id} className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}>
                 <td className={`px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 ${accentClass.brigCell} whitespace-nowrap text-xs`}>
-                  {brigada}
+                  {sede.nombre}
                 </td>
-
-                {/* WORKER: celdas por semana */}
                 {rol === "WORKER" && semanas.map((sem) => (
-                  <EstadoCell key={sem} estado={getEstado(brigada, sem)} />
+                  <EstadoCell key={sem} estado={getEstado(sede.nombre, sem)} />
                 ))}
-
-                {/* ADMIN: una celda "completo" */}
                 {rol === "ADMIN" && (
-                  <EstadoCell estado={getEstado(brigada, "completo")} />
+                  <EstadoCell estado={getEstado(sede.nombre, "completo")} />
                 )}
-
-                {conMensual && <EstadoCell estado={getEstado(brigada, "mensual")} />}
+                {conMensual && <EstadoCell estado={getEstado(sede.nombre, "mensual")} />}
               </tr>
             ))}
           </tbody>
@@ -203,25 +197,25 @@ const MonthTable = ({
 // ─── View ─────────────────────────────────────────────────────────────────────
 const CuadroControlAdminView = () => {
   const { user } = useAuthContext();
-  const [vista, setVista] = useState<Vista>("WORKER");
+  const [vista,        setVista]        = useState<Vista>("WORKER");
+  const [sedes,        setSedes]        = useState<Sede[]>([]);
+  const [loadingSedes, setLoadingSedes] = useState(true);
+
+  useEffect(() => {
+    if (!user?.token) return;
+    getSedesRequest(user.token)
+      .then(setSedes)
+      .catch(() => setSedes([]))
+      .finally(() => setLoadingSedes(false));
+  }, [user?.token]);
 
   const workerAccent = {
-    header:     "bg-[#003366]",
-    subheader:  "bg-[#1a4d8f]",
-    mensual:    "bg-[#0f3460]",
-    brigCell:   "bg-blue-50/60",
-    badge:      "bg-cyan-100",
-    badgeText:  "text-cyan-600",
-    shareColor: "cyan",
+    header: "bg-[#003366]", subheader: "bg-[#1a4d8f]", mensual: "bg-[#0f3460]",
+    brigCell: "bg-blue-50/60", badge: "bg-cyan-100", badgeText: "text-cyan-600", shareColor: "cyan",
   };
   const adminAccent = {
-    header:     "bg-[#3b0764]",
-    subheader:  "bg-[#5b21b6]",
-    mensual:    "bg-[#3b0764]",
-    brigCell:   "bg-purple-50/60",
-    badge:      "bg-purple-100",
-    badgeText:  "text-purple-600",
-    shareColor: "purple",
+    header: "bg-[#3b0764]", subheader: "bg-[#5b21b6]", mensual: "bg-[#3b0764]",
+    brigCell: "bg-purple-50/60", badge: "bg-purple-100", badgeText: "text-purple-600", shareColor: "purple",
   };
 
   return (
@@ -229,35 +223,46 @@ const CuadroControlAdminView = () => {
       <div className="min-h-screen p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Cuadro de Control</h1>
-          <p className="text-gray-600">Vista completa de registros por brigada</p>
+          <p className="text-gray-600">Vista completa de registros por sede</p>
         </div>
 
         {/* Tab switcher */}
         <div className="flex gap-3 mb-8">
           <button onClick={() => setVista("WORKER")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${vista === "WORKER" ? "bg-[#003366] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              vista === "WORKER" ? "bg-[#003366] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
           >
             <Users size={15} /> Workers
           </button>
           <button onClick={() => setVista("ADMIN")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${vista === "ADMIN" ? "bg-[#3b0764] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              vista === "ADMIN" ? "bg-[#3b0764] text-white shadow-md" : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
           >
             <ShieldCheck size={15} /> Admin
           </button>
         </div>
 
-        {MONTHS.map((month, i) => (
-          <MonthTable
-            key={`${vista}-${month}`}
-            monthName={month}
-            monthIndex={i}
-            rol={vista}
-            token={user?.token ?? ""}
-            docs={vista === "WORKER" ? WORKER_DOCS : ADMIN_DOCS}
-            conMensual={vista === "WORKER"}
-            accentClass={vista === "WORKER" ? workerAccent : adminAccent}
-          />
-        ))}
+        {loadingSedes ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm py-8">
+            <Loader2 size={16} className="animate-spin" /> Cargando sedes...
+          </div>
+        ) : (
+          MONTHS.map((month, i) => (
+            <MonthTable
+              key={`${vista}-${month}`}
+              monthName={month}
+              monthIndex={i}
+              rol={vista}
+              token={user?.token ?? ""}
+              sedes={sedes}
+              docs={vista === "WORKER" ? WORKER_DOCS : ADMIN_DOCS}
+              conMensual={vista === "WORKER"}
+              accentClass={vista === "WORKER" ? workerAccent : adminAccent}
+            />
+          ))
+        )}
       </div>
     </LayoutComponent>
   );

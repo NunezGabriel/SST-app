@@ -5,14 +5,14 @@ import LayoutComponent from "../components/layoutComponent";
 import { useAuthContext } from "@/context/AuthContext";
 import { CheckCircle2, XCircle, Lock, Loader2, Share2, ExternalLink } from "lucide-react";
 import axios from "axios";
+import { getSedesRequest, type Sede } from "@/lib/api/sedes";
 
 const API_URL = "http://localhost:8080";
 
 type Estado = "COMPLETO" | "FALTA" | "BLOQUEADO" | "CARGANDO";
 
-const BRIGADAS   = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
-const MONTHS     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const SEMANAS    = (m: string) => [`01 al 07 de ${m}`,`08 al 14 de ${m}`,`15 al 21 de ${m}`,`22 al 31 de ${m}`];
+const MONTHS      = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const SEMANAS     = (m: string) => [`01 al 07 de ${m}`,`08 al 14 de ${m}`,`15 al 21 de ${m}`,`22 al 31 de ${m}`];
 const WORKER_DOCS = ["Licencia / SOAT / Bitácora","Control de Salud Diario","ATS - Charla 5 min"];
 
 const today        = new Date();
@@ -56,8 +56,7 @@ const ShareButton = ({ monthName, token }: { monthName: string; token: string })
 
   const handleShare = async () => {
     if (link) { window.open(link, "_blank"); return; }
-    setLoading(true);
-    setError(false);
+    setLoading(true); setError(false);
     try {
       const res = await axios.get(`${API_URL}/api/drive/link-mes`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -73,31 +72,26 @@ const ShareButton = ({ monthName, token }: { monthName: string; token: string })
   };
 
   return (
-    <button
-      onClick={handleShare}
-      disabled={loading}
+    <button onClick={handleShare} disabled={loading}
       title={error ? "Carpeta no encontrada" : "Abrir carpeta del mes en Drive"}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
-        ${error
-          ? "bg-red-50 text-red-400 border border-red-200"
-          : "bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border border-cyan-200 hover:border-cyan-300"
-        }`}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+        error ? "bg-red-50 text-red-400 border border-red-200"
+              : "bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border border-cyan-200 hover:border-cyan-300"
+      }`}
     >
-      {loading
-        ? <Loader2 size={12} className="animate-spin" />
-        : error
-          ? <XCircle size={12} />
-          : link
-            ? <ExternalLink size={12} />
-            : <Share2 size={12} />
-      }
+      {loading ? <Loader2 size={12} className="animate-spin" />
+        : error  ? <XCircle size={12} />
+        : link   ? <ExternalLink size={12} />
+        :           <Share2 size={12} />}
       {error ? "No encontrada" : "Compartir carpeta"}
     </button>
   );
 };
 
 // ─── Tabla por mes ────────────────────────────────────────────────────────────
-const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; monthIndex: number; token: string }) => {
+const MonthTable = ({ monthName, monthIndex, token, sedes }: {
+  monthName: string; monthIndex: number; token: string; sedes: Sede[];
+}) => {
   const locked  = monthIndex > currentMonth;
   const semanas = SEMANAS(monthName);
 
@@ -116,15 +110,18 @@ const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; month
       .finally(() => setIsLoading(false));
   }, [monthName, locked, token]);
 
-  const getEstado = (brigada: string, key: string): Estado => {
+  const getEstado = (sedNombre: string, key: string): Estado => {
     if (locked) return "BLOQUEADO";
+    // Capacitación mensual bloqueada en Enero (0) y Febrero (1)
+    if (key === "mensual" && (monthIndex === 0 || monthIndex === 1)) return "BLOQUEADO";
     if (isLoading || !estadoMes) return "CARGANDO";
-    return estadoMes[brigada]?.[key] ? "COMPLETO" : "FALTA";
+    return estadoMes[sedNombre.toUpperCase()]?.[key] ? "COMPLETO" : "FALTA";
   };
+
+  if (sedes.length === 0) return null;
 
   return (
     <div className={`mb-8 ${locked ? "opacity-40 pointer-events-none select-none" : ""}`}>
-      {/* Header de tabla */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           {locked && <Lock size={12} className="text-gray-400" />}
@@ -135,7 +132,6 @@ const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; month
             <span className="text-[10px] bg-cyan-100 text-cyan-600 font-bold px-2 py-0.5 rounded-full">Mes actual</span>
           )}
         </div>
-        {/* Botón compartir — solo si el mes no está bloqueado */}
         {!locked && <ShareButton monthName={monthName} token={token} />}
       </div>
 
@@ -143,7 +139,7 @@ const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; month
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="px-4 py-2.5 text-left font-bold text-white bg-[#003366] border-r border-blue-900 whitespace-nowrap min-w-[130px]">BRIGADA</th>
+              <th className="px-4 py-2.5 text-left font-bold text-white bg-[#003366] border-r border-blue-900 whitespace-nowrap min-w-[130px]">SEDE</th>
               {semanas.map((sem, i) => (
                 <th key={i} className="px-3 py-2.5 text-center font-semibold text-white bg-[#1a4d8f] border-r border-blue-800 whitespace-nowrap w-28 text-[10px] leading-tight">
                   {sem}
@@ -155,11 +151,15 @@ const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; month
             </tr>
           </thead>
           <tbody>
-            {BRIGADAS.map((brigada, bIdx) => (
-              <tr key={brigada} className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}>
-                <td className="px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 bg-blue-50/60 whitespace-nowrap text-xs">{brigada}</td>
-                {semanas.map((sem) => <EstadoCell key={sem} estado={getEstado(brigada, sem)} />)}
-                <EstadoCell estado={getEstado(brigada, "mensual")} />
+            {sedes.map((sede, bIdx) => (
+              <tr key={sede.id} className={bIdx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}>
+                <td className="px-4 py-2.5 font-semibold text-gray-700 border-r border-gray-100 bg-blue-50/60 whitespace-nowrap text-xs">
+                  {sede.nombre}
+                </td>
+                {semanas.map((sem) => (
+                  <EstadoCell key={sem} estado={getEstado(sede.nombre, sem)} />
+                ))}
+                <EstadoCell estado={getEstado(sede.nombre, "mensual")} />
               </tr>
             ))}
           </tbody>
@@ -178,16 +178,34 @@ const MonthTable = ({ monthName, monthIndex, token }: { monthName: string; month
 // ─── View ─────────────────────────────────────────────────────────────────────
 const CuadroControlView = () => {
   const { user } = useAuthContext();
+  const [sedes,        setSedes]        = useState<Sede[]>([]);
+  const [loadingSedes, setLoadingSedes] = useState(true);
+
+  useEffect(() => {
+    if (!user?.token) return;
+    getSedesRequest(user.token)
+      .then(setSedes)
+      .catch(() => setSedes([]))
+      .finally(() => setLoadingSedes(false));
+  }, [user?.token]);
+
   return (
     <LayoutComponent>
       <div className="min-h-screen p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Cuadro de Control</h1>
-          <p className="text-gray-600">Registro mensual de documentos por brigada</p>
+          <p className="text-gray-600">Registro mensual de documentos por sede</p>
         </div>
-        {MONTHS.map((month, i) => (
-          <MonthTable key={month} monthName={month} monthIndex={i} token={user?.token ?? ""} />
-        ))}
+
+        {loadingSedes ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm py-8">
+            <Loader2 size={16} className="animate-spin" /> Cargando sedes...
+          </div>
+        ) : (
+          MONTHS.map((month, i) => (
+            <MonthTable key={month} monthName={month} monthIndex={i} token={user?.token ?? ""} sedes={sedes} />
+          ))
+        )}
       </div>
     </LayoutComponent>
   );

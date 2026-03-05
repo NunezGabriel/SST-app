@@ -98,7 +98,7 @@ const RegistroAdminView = () => {
         <div className="mb-5 flex items-center gap-2 px-4 py-2.5 bg-purple-50 border border-purple-100 rounded-xl w-fit">
           <div className="w-2 h-2 rounded-full bg-purple-400" />
           <p className="text-xs text-purple-600 font-medium">
-            Al subir un documento se copiará a las 5 sedes: CHICLAYO · CHIMBOTE · HUANCABAMBA · JAÉN · TRUJILLO
+            Al subir un documento se copiará a todas las sedes disponibles
           </p>
         </div>
 

@@ -42,7 +42,7 @@ const LoginView = () => {
         </div>
 
         <div className="text-center mb-12">
-          <p className="text-blue-200 text-sm">Health Safety & Enviorment</p>
+          <p className="text-blue-200 text-sm">Health Safety & Environment</p>
         </div>
 
         <form

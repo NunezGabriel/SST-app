@@ -83,7 +83,7 @@ const RegistroAdminView = () => {
                   </div>
                   <span className="text-indigo-400 font-semibold text-xs uppercase tracking-wider">GESTIÓN DE CARPETAS</span>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-1">Configura las Carpetas de Drive</h2>
+                <h2 className="text-2xl font-bold text-black mb-1">Configura las Carpetas de Drive</h2>
                 <p className="text-gray-400 text-sm">Explora y organiza las carpetas del equipo.</p>
               </div>
               <Link href="/registro/gestionar-carpetas" className="self-start bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-5 py-2.5 rounded-full text-sm flex items-center gap-2 shadow-lg transition-all hover:scale-105">

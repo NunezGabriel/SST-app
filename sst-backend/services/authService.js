@@ -15,11 +15,12 @@ async function login(correo, contrasena) {
   }
 
   const payload = {
-    id:       usuario.id,
-    tipo:     usuario.tipo,
-    nombre:   usuario.nombre,
-    apellido: usuario.apellido,
-    sede:     usuario.sede,      // ← agregado
+    id:        usuario.id,
+    tipo:      usuario.tipo,
+    nombre:    usuario.nombre,
+    apellido:  usuario.apellido,
+    idSede:    usuario.idSede,
+    sede:      usuario.sede?.nombre ?? "",   // ← nombre string para Drive y UI
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, {

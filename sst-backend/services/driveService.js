@@ -1,8 +1,9 @@
 const driveRepository = require("../repositories/driveRepository");
+const prisma = require("../prisma");
 
 const ROL_CARPETA = { WORKER: "Worker", ADMIN: "Admin" };
 
-const BRIGADAS    = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
+// const BRIGADAS    = ["CHICLAYO", "CHIMBOTE", "HUANCABAMBA", "JAÉN", "TRUJILLO"];
 const SEMANAS_MES = (mes) => [
   `01 al 07 de ${mes}`,
   `08 al 14 de ${mes}`,
@@ -23,6 +24,7 @@ async function listarArchivos(folderId) {
 // ADMIN:  Admin  / mes / SEDE / tipoDoc              (se replica a TODAS las sedes en paralelo)
 async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
   const carpetaRol = ROL_CARPETA[rol] || rol;
+  const nombreBrigada = brigada ? brigada.toUpperCase() : "TRUJILLO";
 
   if (rol === "ADMIN") {
     const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
@@ -31,11 +33,13 @@ async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
     // así las 5 sedes comparten la misma carpeta Admin/mes
     const adminId = await driveRepository.obtenerOCrearCarpeta(carpetaRol, ROOT);
     const mesId   = await driveRepository.obtenerOCrearCarpeta(mes, adminId);
+    const sedesDB = await prisma.sede.findMany();
 
     // Ahora subir a cada sede en paralelo usando mesId ya existente
     const resultados = await Promise.all(
-      BRIGADAS.map(async (sede) => {
-        const sedeId   = await driveRepository.obtenerOCrearCarpeta(sede, mesId);
+      sedesDB.map(async (sede) => {
+        const sedeNombre = sede.nombre.toUpperCase();
+        const sedeId   = await driveRepository.obtenerOCrearCarpeta(sedeNombre, mesId);
         const tipoId   = await driveRepository.obtenerOCrearCarpeta(tipoDoc, sedeId);
         return driveRepository.subirArchivoEnCarpeta({
           buffer:       file.buffer,
@@ -50,8 +54,8 @@ async function subirArchivo({ file, rol, brigada, mes, semana, tipoDoc }) {
 
   // WORKER: Worker / mes / brigada / semana / tipoDoc
   const rutaCarpetas = semana
-    ? [carpetaRol, mes, brigada, semana, tipoDoc]
-    : [carpetaRol, mes, brigada, tipoDoc]; // capacitación mensual sin semana
+    ? [carpetaRol, mes, nombreBrigada, semana, tipoDoc]
+    : [carpetaRol, mes, nombreBrigada, tipoDoc];
 
   return driveRepository.subirArchivo({
     buffer:       file.buffer,
@@ -79,10 +83,13 @@ async function getEstadoMes(mes, rol) {
   const carpetaRol = esWorker ? "Worker" : "Admin";
   const tiposDoc   = esWorker ? WORKER_DOCS : ADMIN_DOCS;
 
+  const sedesDB = await prisma.sede.findMany();
+  const nombresSedes = sedesDB.map(s => s.nombre.toUpperCase());
+
   return driveRepository.getEstadoMes({
     rol:            carpetaRol,
     mes,
-    brigadas:       BRIGADAS,
+    brigadas:       nombresSedes, // <--- DINÁMICO
     semanas:        esWorker ? SEMANAS_MES(mes) : [],
     tiposDoc,
     tipoDocMensual: esWorker ? "Capacitación Mensual" : null,

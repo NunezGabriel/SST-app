@@ -167,13 +167,17 @@ const ArchivoModal = ({
   const options  = isAdmin ? adminOptions : workerOptions;
   const rolLabel = isAdmin ? "ADMIN" : "WORKER";
 
-  const routeParams = (tipoDoc: string) => ({
-    rol:     rolLabel,
-    brigada: brigada || user?.sede || "SIN_BRIGADA",
-    mes:     monthName,
-    semana:  tipoFijo ? "" : weekLabel,
-    tipoDoc,
-  });
+  const routeParams = (tipoDoc: string) => {
+    const nombreSede = brigada || user?.sede || "SIN_BRIGADA";
+  
+    return {
+      rol: rolLabel as "WORKER" | "ADMIN",  // ← cast
+      brigada: String(nombreSede).toUpperCase(),
+      mes: monthName,
+      semana: tipoFijo ? "" : weekLabel,
+      tipoDoc,
+    };
+  };
 
   const fetchCurrentFiles = async (tipoDoc: string) => {
     if (!user?.token) return;

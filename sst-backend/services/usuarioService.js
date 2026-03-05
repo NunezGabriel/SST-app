@@ -2,37 +2,37 @@ const bcrypt = require("bcrypt");
 const prisma = require("../prisma");
 const usuarioRepository = require("../repositories/usuarioRepository");
 
+// Helper: include sede en queries
+const INCLUDE_SEDE = { sede: { select: { id: true, nombre: true } } };
+
 async function crearUsuarioConAsignaciones(data) {
   const hashedPassword = await bcrypt.hash(data.contrasena, 10);
 
   return prisma.$transaction(async (tx) => {
     const nuevoUsuario = await tx.usuario.create({
       data: {
-        nombre: data.nombre,
-        apellido: data.apellido,
-        dni: data.dni,
-        correo: data.correo,
+        nombre:    data.nombre,
+        apellido:  data.apellido,
+        dni:       data.dni,
+        correo:    data.correo,
         contrasena: hashedPassword,
-        tipo: data.tipo || "WORKER",
-        telefono: data.telefono || null,
-        sede: data.sede || "TRUJILLO",
+        tipo:      data.tipo || "WORKER",
+        telefono:  data.telefono || null,
+        idSede:    Number(data.idSede),   // ← FK numérica
       },
+      include: INCLUDE_SEDE,
     });
 
-    // Solo hacer asignaciones automáticas para workers
     if (nuevoUsuario.tipo === "WORKER") {
-      // NOTA: No se crean ProgresoCharla automáticamente para evitar 365 registros por usuario
-      // Se crearán solo cuando el usuario interactúe con una charla desde el frontend
-      
       const documentos = await tx.documentoSeguridad.findMany();
-      const logros = await tx.logro.findMany();
+      const logros     = await tx.logro.findMany();
 
       if (documentos.length > 0) {
         await tx.visualizacionDocumento.createMany({
           data: documentos.map((doc) => ({
-            idUsuario: nuevoUsuario.id,
+            idUsuario:  nuevoUsuario.id,
             idDocumento: doc.id,
-            estado: "SIN_VER",
+            estado:     "SIN_VER",
           })),
         });
       }
@@ -41,20 +41,14 @@ async function crearUsuarioConAsignaciones(data) {
         await tx.usuarioLogro.createMany({
           data: logros.map((logro) => ({
             idUsuario: nuevoUsuario.id,
-            idLogro: logro.id,
-            estado: "PENDIENTE",
+            idLogro:   logro.id,
+            estado:    "PENDIENTE",
           })),
         });
       }
 
-      // Crear registro de control de examen (BloqueoExamen)
       await tx.bloqueoExamen.create({
-        data: {
-          idUsuario: nuevoUsuario.id,
-          intentosUsados: 0,
-          bloqueadoHasta: null,
-          fechaUltimoIntento: null,
-        },
+        data: { idUsuario: nuevoUsuario.id, intentosUsados: 0 },
       });
     }
 
@@ -63,59 +57,43 @@ async function crearUsuarioConAsignaciones(data) {
 }
 
 async function listarUsuarios() {
-  return usuarioRepository.findAll();
+  return prisma.usuario.findMany({
+    include: INCLUDE_SEDE,
+    orderBy: { fechaCreacion: "desc" },
+  });
 }
 
 async function listarUsuariosConStats() {
-  // 1. Traer todos los usuarios
-  const usuarios = await usuarioRepository.findAll();
-
-  // 2. Total de charlas en el sistema
+  const usuarios     = await listarUsuarios();
   const totalCharlas = await prisma.charla.count();
 
-  // 3. Para cada usuario, calcular sus stats en paralelo
   const usuariosConStats = await Promise.all(
     usuarios.map(async (u) => {
       if (u.tipo !== "WORKER") {
         return { ...u, charlasCompletadas: null, totalCharlas: null, examenStatus: "—", cumpl: null };
       }
 
-      // Charlas completadas
       const charlasCompletadas = await prisma.progresoCharla.count({
         where: { idUsuario: u.id, estado: "COMPLETADA" },
       });
 
-      // Examen: chequear directamente en intentoExamen si hay algún aprobado
       const ahora = new Date();
       let examenStatus = "No aprobado";
 
-      // Si está bloqueado actualmente → Bloqueada
-      const bloqueo = await prisma.bloqueoExamen.findUnique({
-        where: { idUsuario: u.id },
-      });
+      const bloqueo = await prisma.bloqueoExamen.findUnique({ where: { idUsuario: u.id } });
 
-      if (bloqueo && bloqueo.bloqueadoHasta && bloqueo.bloqueadoHasta > ahora) {
+      if (bloqueo?.bloqueadoHasta && bloqueo.bloqueadoHasta > ahora) {
         examenStatus = "Bloqueada";
       } else {
-        // Verificar directamente si algún intento fue aprobado
         const intentoAprobado = await prisma.intentoExamen.findFirst({
           where: { idUsuario: u.id, aprobado: true },
         });
         examenStatus = intentoAprobado ? "Aprobado" : "No aprobado";
       }
 
-      // Cumplimiento: % de charlas completadas del total
-      const cumpl = totalCharlas > 0
-        ? Math.round((charlasCompletadas / totalCharlas) * 100)
-        : 0;
+      const cumpl = totalCharlas > 0 ? Math.round((charlasCompletadas / totalCharlas) * 100) : 0;
 
-      return {
-        ...u,
-        charlasCompletadas,
-        totalCharlas,
-        examenStatus,
-        cumpl,
-      };
+      return { ...u, charlasCompletadas, totalCharlas, examenStatus, cumpl };
     })
   );
 
@@ -123,17 +101,32 @@ async function listarUsuariosConStats() {
 }
 
 async function obtenerUsuarioPorId(id) {
-  return usuarioRepository.findById(id);
+  return prisma.usuario.findUnique({
+    where: { id },
+    include: INCLUDE_SEDE,
+  });
 }
 
 async function actualizarUsuario(id, data) {
-  const updateData = { ...data };
+  const updateData = {
+    nombre:   data.nombre,
+    apellido: data.apellido,
+    dni:      data.dni,
+    correo:   data.correo,
+    tipo:     data.tipo,
+    telefono: data.telefono || null,
+    idSede:   Number(data.idSede),
+  };
 
   if (data.contrasena) {
     updateData.contrasena = await bcrypt.hash(data.contrasena, 10);
   }
 
-  return usuarioRepository.update(id, updateData);
+  return prisma.usuario.update({
+    where: { id },
+    data: updateData,
+    include: INCLUDE_SEDE,
+  });
 }
 
 async function desactivarUsuario(id) {

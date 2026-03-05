@@ -275,7 +275,7 @@ export default function ProfileView() {
                   <div>
                     <p className="text-xs text-gray-500">Sede</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {usuarioCompleto.sede}
+                      {usuarioCompleto.sede?.nombre ?? "—"}
                     </p>
                   </div>
                 </div>

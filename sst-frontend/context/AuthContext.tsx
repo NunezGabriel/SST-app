@@ -24,27 +24,18 @@ interface User {
   email?: string;
   token: string;
   apellido?: string;
-  sede?: string;
+  sede: string;    // nombre de la sede, ej: "CHICLAYO"
+  idSede: number;  // FK por si se necesita en algún lado
 }
 
 interface AuthContextType {
   user: User | null;
   login: (correo: string, contrasena: string) => Promise<void>;
   logout: () => void;
-  changePassword: (
-    currentPassword: string,
-    newPassword: string,
-  ) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   solicitarRecuperacion: (correo: string) => Promise<{ message: string }>;
-  validarCodigo: (
-    correo: string,
-    codigo: string,
-  ) => Promise<{ valid: boolean; message: string }>;
-  resetPassword: (
-    correo: string,
-    codigo: string,
-    nuevaContrasena: string,
-  ) => Promise<{ message: string }>;
+  validarCodigo: (correo: string, codigo: string) => Promise<{ valid: boolean; message: string }>;
+  resetPassword: (correo: string, codigo: string, nuevaContrasena: string) => Promise<{ message: string }>;
   isLoading: boolean;
 }
 
@@ -53,10 +44,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 function decodeToken(token: string) {
   try {
     const payload = token.split(".")[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded;
-  } catch (err) {
-    console.error("Error decodificando token:", err);
+    return JSON.parse(atob(payload));
+  } catch {
     return null;
   }
 }
@@ -70,10 +59,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error("Error parsing stored user:", error);
+        setUser(JSON.parse(storedUser));
+      } catch {
         localStorage.removeItem("user");
       }
     }
@@ -81,105 +68,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (correo: string, contrasena: string) => {
-    try {
-      const { token, usuario } = await loginRequest(correo, contrasena);
+    const { token, usuario } = await loginRequest(correo, contrasena);
 
-      const newUser: User = {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        rol: usuario.tipo,
-        email: correo,
-        token: token,
-        apellido: usuario.apellido,
-        sede: usuario.sede ?? "TRUJILLO",
-      };
+    const newUser: User = {
+      id:       usuario.id,
+      nombre:   usuario.nombre,
+      rol:      usuario.tipo,
+      email:    correo,
+      token:    token,
+      apellido: usuario.apellido,
+      sede:     usuario.sede ?? "",     // ← nombre string directo del payload
+      idSede:   usuario.idSede ?? 0,
+    };
 
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      router.push("/dashboard");
-    } catch (error: any) {
-      throw error;
-    }
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    router.push("/dashboard");
   };
 
   const logout = async () => {
-    // Llamar al backend para logout (aunque con JWT stateless es principalmente simbólico)
     if (user?.token) {
-      try {
-        await logoutRequest(user.token);
-      } catch (error) {
-        console.error("Error al cerrar sesión en el servidor:", error);
-      }
+      try { await logoutRequest(user.token); } catch { /* no-op */ }
     }
-    // Limpiar datos del cliente
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
     router.push("/");
   };
 
-  const changePassword = async (
-    currentPassword: string,
-    newPassword: string,
-  ) => {
+  const changePassword = async (currentPassword: string, newPassword: string) => {
     if (!user) throw new Error("No hay usuario autenticado");
-    try {
-      await changePasswordRequest(user.token, currentPassword, newPassword);
-      alert("Contraseña cambiada correctamente");
-    } catch (error: any) {
-      throw error;
-    }
+    await changePasswordRequest(user.token, currentPassword, newPassword);
+    alert("Contraseña cambiada correctamente");
   };
 
-  const solicitarRecuperacion = async (correo: string) => {
-    try {
-      return await solicitarRecuperacionRequest(correo);
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  const validarCodigo = async (correo: string, codigo: string) => {
-    try {
-      return await validarCodigoRequest(correo, codigo);
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  const resetPassword = async (
-    correo: string,
-    codigo: string,
-    nuevaContrasena: string,
-  ) => {
-    try {
-      return await resetPasswordRequest(correo, codigo, nuevaContrasena);
-    } catch (error: any) {
-      throw error;
-    }
-  };
+  const solicitarRecuperacion = (correo: string) => solicitarRecuperacionRequest(correo);
+  const validarCodigo = (correo: string, codigo: string) => validarCodigoRequest(correo, codigo);
+  const resetPassword = (correo: string, codigo: string, nuevaContrasena: string) =>
+    resetPasswordRequest(correo, codigo, nuevaContrasena);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        changePassword,
-        solicitarRecuperacion,
-        validarCodigo,
-        resetPassword,
-        isLoading,
-      }}
-    >
+    <AuthContext.Provider value={{ user, login, logout, changePassword, solicitarRecuperacion, validarCodigo, resetPassword, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuthContext = () => {
-  const context = useContext(AuthContext);
-  if (!context)
-    throw new Error("useAuthContext debe usarse dentro de AuthProvider");
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuthContext debe usarse dentro de AuthProvider");
+  return ctx;
 };

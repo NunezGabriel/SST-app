@@ -62,7 +62,8 @@ export interface UsuarioCompleto {
   fechaCreacion: string;
   fechaActualizacion: string;
   telefono?: string | null;
-  sede: string;
+  idSede: number;
+  sede: { id: number; nombre: string };  // ← objeto, no string
 }
 
 export interface MeResponse {

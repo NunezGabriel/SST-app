@@ -22,8 +22,7 @@ async function subirArchivo(req, res) {
     if (!rol || !mes || !tipoDoc)
       return res.status(400).json({ error: "Faltan datos: rol, mes, tipoDoc" });
 
-    // Para ADMIN: subir cada archivo secuencialmente para evitar race condition
-    // en la creación de carpetas (Admin / mes se comparten entre sedes)
+    // Secuencial para evitar race condition en creación de carpetas
     const resultados = [];
     for (const file of req.files) {
       const r = await driveService.subirArchivo({ file, rol, brigada, mes, semana, tipoDoc });
@@ -88,4 +87,28 @@ async function listarPorRuta(req, res) {
   }
 }
 
-module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes, listarPorRuta };
+// GET /api/drive/link-mes?rol=WORKER&mes=Enero
+// Devuelve el webViewLink de la carpeta Worker/Enero o Admin/Enero
+async function getLinkMes(req, res) {
+  try {
+    const { rol, mes } = req.query;
+    if (!rol || !mes)
+      return res.status(400).json({ error: "Faltan parámetros: rol, mes" });
+    const link = await driveService.getLinkMes(mes, rol);
+    if (!link) return res.status(404).json({ error: "Carpeta no encontrada" });
+    res.json({ link });
+  } catch (error) {
+    console.error("Error al obtener link del mes:", error.message);
+    res.status(500).json({ error: "Error al obtener link del mes" });
+  }
+}
+
+module.exports = {
+  listarArchivos,
+  subirArchivo,
+  crearCarpeta,
+  eliminar,
+  getEstadoMes,
+  listarPorRuta,
+  getLinkMes,
+};

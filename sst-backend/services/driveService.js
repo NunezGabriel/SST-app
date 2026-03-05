@@ -111,6 +111,13 @@ async function listarPorRuta({ rol, brigada, mes, semana, tipoDoc }) {
   return driveRepository.listarArchivos(parentId);
 }
 
+// ─── Link de la carpeta del mes ───────────────────────────────────────────────
+// WORKER: Worker / mes    ADMIN: Admin / mes
+async function getLinkMes(mes, rol) {
+  const carpetaRol = ROL_CARPETA[rol] || rol;
+  return driveRepository.getLinkMes(carpetaRol, mes);
+}
+
 module.exports = {
   listarArchivos,
   subirArchivo,
@@ -118,4 +125,5 @@ module.exports = {
   eliminar,
   getEstadoMes,
   listarPorRuta,
+  getLinkMes,
 };

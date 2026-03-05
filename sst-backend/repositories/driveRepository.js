@@ -1,17 +1,12 @@
 const { google } = require("googleapis");
 const { Readable } = require("stream");
 
-// ─── Cliente OAuth2 con refresh token (no expira) ────────────────────────────
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI,
 );
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-});
-
+oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
 const drive = google.drive({ version: "v3", auth: oauth2Client });
 
 // ─── Listar archivos dentro de una carpeta ───────────────────────────────────
@@ -24,61 +19,57 @@ async function listarArchivos(folderId) {
   return response.data.files ?? [];
 }
 
-// ─── Buscar subcarpeta por nombre — si no existe, crearla ───────────────────
+// ─── Buscar subcarpeta por nombre — retorna id o null ────────────────────────
+async function buscarCarpeta(nombre, parentId) {
+  const res = await drive.files.list({
+    q: `'${parentId}' in parents and name = '${nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    fields: "files(id)",
+  });
+  return res.data.files?.[0]?.id ?? null;
+}
+
+// ─── Buscar carpeta y devolver id + webViewLink ───────────────────────────────
+async function buscarCarpetaConLink(nombre, parentId) {
+  const res = await drive.files.list({
+    q: `'${parentId}' in parents and name = '${nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    fields: "files(id, webViewLink)",
+  });
+  return res.data.files?.[0] ?? null;
+}
+
+// ─── Buscar subcarpeta — si no existe, crearla ───────────────────────────────
 async function obtenerOCrearCarpeta(nombre, parentId) {
   const busqueda = await drive.files.list({
     q: `'${parentId}' in parents and name = '${nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: "files(id, name)",
   });
-
-  if (busqueda.data.files.length > 0) {
-    return busqueda.data.files[0].id;
-  }
-
-  // No existe → crearla
+  if (busqueda.data.files.length > 0) return busqueda.data.files[0].id;
   const carpeta = await drive.files.create({
-    requestBody: {
-      name: nombre,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: [parentId],
-    },
+    requestBody: { name: nombre, mimeType: "application/vnd.google-apps.folder", parents: [parentId] },
     fields: "id",
   });
-
   return carpeta.data.id;
 }
 
-// ─── Subir archivo a: ROOT / rol / brigada / mes / semana / tipoDoc ──────────
+// ─── Subir archivo navegando ruta completa ───────────────────────────────────
 async function subirArchivo({ buffer, mimetype, originalname, rutaCarpetas }) {
   const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-
-  // Navegar/crear carpetas de la ruta
   let parentId = ROOT;
   for (const nombreCarpeta of rutaCarpetas) {
     parentId = await obtenerOCrearCarpeta(nombreCarpeta, parentId);
   }
-
-  // Convertir buffer a stream
   const stream = new Readable();
   stream.push(buffer);
   stream.push(null);
-
   const archivo = await drive.files.create({
-    requestBody: {
-      name: originalname,
-      parents: [parentId],
-    },
-    media: {
-      mimeType: mimetype,
-      body: stream,
-    },
+    requestBody: { name: originalname, parents: [parentId] },
+    media: { mimeType: mimetype, body: stream },
     fields: "id, name, webViewLink",
   });
-
   return archivo.data;
 }
 
-// ─── Subir archivo directamente en una carpeta ya conocida (por ID) ──────────
+// ─── Subir archivo en carpeta ya conocida (por ID) ───────────────────────────
 async function subirArchivoEnCarpeta({ buffer, mimetype, originalname, parentId }) {
   const stream = new Readable();
   stream.push(buffer);
@@ -91,15 +82,11 @@ async function subirArchivoEnCarpeta({ buffer, mimetype, originalname, parentId 
   return archivo.data;
 }
 
-// ─── Crear carpeta manualmente desde la UI ───────────────────────────────────
+// ─── Crear carpeta desde UI ───────────────────────────────────────────────────
 async function crearCarpeta(nombre, parentId) {
   const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   const carpeta = await drive.files.create({
-    requestBody: {
-      name: nombre,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: [parentId || ROOT],
-    },
+    requestBody: { name: nombre, mimeType: "application/vnd.google-apps.folder", parents: [parentId || ROOT] },
     fields: "id, name, mimeType, webViewLink",
   });
   return carpeta.data;
@@ -110,19 +97,7 @@ async function eliminar(fileId) {
   await drive.files.delete({ fileId });
 }
 
-// ─── AGREGAR estas funciones al driveRepository.js existente ─────────────────
-// (antes del module.exports)
-
-// Buscar carpeta por nombre exacto dentro de un padre — retorna el id o null
-async function buscarCarpeta(nombre, parentId) {
-  const res = await drive.files.list({
-    q: `'${parentId}' in parents and name = '${nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-    fields: "files(id)",
-  });
-  return res.data.files?.[0]?.id ?? null;
-}
-
-// Verificar si una carpeta tiene al menos 1 archivo (no carpetas)
+// ─── Verificar si carpeta tiene al menos 1 archivo ───────────────────────────
 async function tieneArchivo(folderId) {
   if (!folderId) return false;
   const res = await drive.files.list({
@@ -133,7 +108,7 @@ async function tieneArchivo(folderId) {
   return (res.data.files?.length ?? 0) > 0;
 }
 
-// Verificar si TODOS los tiposDoc tienen al menos 1 archivo dentro de semanaId
+// ─── Verificar si TODOS los tiposDoc tienen archivo dentro de semanaId ────────
 async function verificarSemana(semanaId, tiposDoc) {
   if (!semanaId) return false;
   const checks = await Promise.all(
@@ -145,52 +120,53 @@ async function verificarSemana(semanaId, tiposDoc) {
   return checks.every(Boolean);
 }
 
-// Estado completo de un mes para un rol
-// rol: "Worker" | "Admin"
-// mes: "Marzo"
-// brigadas: ["CHICLAYO", "TRUJILLO", ...]
-// semanas: ["01 al 07 de Marzo", "08 al 14 de Marzo", ...]
-// tiposDoc: ["ATS - Charla 5 min", "Control de Salud Diario", ...]
-// tipoDocMensual: "Capacitacion Mensual" (solo para Worker, null para Admin)
-async function getEstadoMes({
-  rol,
-  mes,
-  brigadas,
-  semanas,
-  tiposDoc,
-  tipoDocMensual,
-}) {
-  const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+// ─── Verificar si TODOS los tiposDoc tienen archivo directamente en brigada ───
+// (para ADMIN que no tiene semanas)
+async function verificarBrigadaAdmin(brigadaId, tiposDoc) {
+  if (!brigadaId) return false;
+  const checks = await Promise.all(
+    tiposDoc.map(async (tipo) => {
+      const tipoId = await buscarCarpeta(tipo, brigadaId);
+      return tieneArchivo(tipoId);
+    }),
+  );
+  return checks.every(Boolean);
+}
 
-  // Resultado: { CHICLAYO: { "01 al 07...": true, mensual: true }, ... }
+// ─── Estado completo de un mes ────────────────────────────────────────────────
+// WORKER: Worker / mes / brigada / semana / tipoDoc  + mensual
+// ADMIN:  Admin  / mes / brigada / tipoDoc           (sin semanas)
+async function getEstadoMes({ rol, mes, brigadas, semanas, tiposDoc, tipoDocMensual }) {
+  const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   const resultado = {};
+
+  // Buscar rol y mes UNA VEZ (compartido entre brigadas)
+  const rolId = await buscarCarpeta(rol, ROOT);
+  const mesId = rolId ? await buscarCarpeta(mes, rolId) : null;
 
   await Promise.all(
     brigadas.map(async (brigada) => {
       resultado[brigada] = {};
+      const brigadaId = mesId ? await buscarCarpeta(brigada, mesId) : null;
 
-      // Navegar hasta la carpeta del mes de esta brigada
-      const rolId = await buscarCarpeta(rol, ROOT);
-      const brigadaId = rolId ? await buscarCarpeta(brigada, rolId) : null;
-      const mesId = brigadaId ? await buscarCarpeta(mes, brigadaId) : null;
-
-      // Verificar cada semana en paralelo
-      await Promise.all(
-        semanas.map(async (semana) => {
-          const semanaId = mesId ? await buscarCarpeta(semana, mesId) : null;
-          resultado[brigada][semana] = await verificarSemana(
-            semanaId,
-            tiposDoc,
-          );
-        }),
-      );
-
-      // Verificar capacitación mensual (solo Worker)
-      if (tipoDocMensual && mesId) {
-        const mensualId = await buscarCarpeta(tipoDocMensual, mesId);
-        resultado[brigada]["mensual"] = await tieneArchivo(mensualId);
+      if (semanas.length > 0) {
+        // WORKER — verificar cada semana
+        await Promise.all(
+          semanas.map(async (semana) => {
+            const semanaId = brigadaId ? await buscarCarpeta(semana, brigadaId) : null;
+            resultado[brigada][semana] = await verificarSemana(semanaId, tiposDoc);
+          }),
+        );
+        // Capacitación mensual
+        if (tipoDocMensual) {
+          const mensualId = brigadaId ? await buscarCarpeta(tipoDocMensual, brigadaId) : null;
+          resultado[brigada]["mensual"] = await tieneArchivo(mensualId);
+        } else {
+          resultado[brigada]["mensual"] = false;
+        }
       } else {
-        resultado[brigada]["mensual"] = false;
+        // ADMIN — verificar tiposDoc directo en brigada (sin semanas)
+        resultado[brigada]["completo"] = await verificarBrigadaAdmin(brigadaId, tiposDoc);
       }
     }),
   );
@@ -198,16 +174,27 @@ async function getEstadoMes({
   return resultado;
 }
 
-// Actualizar module.exports al final del archivo:
-// module.exports = { listarArchivos, subirArchivo, crearCarpeta, eliminar, getEstadoMes };
+// ─── Obtener webViewLink de carpeta de mes ────────────────────────────────────
+// WORKER: Worker / mes    ADMIN: Admin / mes
+async function getLinkMes(rol, mes) {
+  const ROOT = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const rolId = await buscarCarpeta(rol, ROOT);
+  if (!rolId) return null;
+  const carpeta = await buscarCarpetaConLink(mes, rolId);
+  return carpeta?.webViewLink ?? null;
+}
 
 module.exports = {
   listarArchivos,
+  buscarCarpeta,
+  buscarCarpetaConLink,
+  obtenerOCrearCarpeta,
   subirArchivo,
+  subirArchivoEnCarpeta,
   crearCarpeta,
   eliminar,
+  tieneArchivo,
+  verificarSemana,
   getEstadoMes,
-  buscarCarpeta,
-  subirArchivoEnCarpeta,
-  obtenerOCrearCarpeta,
+  getLinkMes,
 };

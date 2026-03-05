@@ -178,10 +178,10 @@ const InduccionView = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Inducción General QHSE - ITELSAC
+                Inducción General QHSE - ECYTEL
               </h3>
               <p className="text-gray-700 leading-relaxed text-base">
-                Bienvenido a ITELSAC, empresa líder en servicios de
+                Bienvenido a ECYTEL, empresa líder en servicios de
                 telecomunicaciones y construcción de redes de fibra óptica en el
                 Perú. Esta inducción cubre los aspectos fundamentales de nuestra
                 Política Integrada de Gestión en Calidad, Seguridad, Salud

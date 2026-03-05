@@ -163,19 +163,6 @@ const CharlasAdminView = () => {
     }
   };
 
-  const handleEliminar = async (id: number) => {
-    if (
-      window.confirm(
-        "¿Estás seguro de que quieres eliminar esta charla? Esta acción es irreversible."
-      )
-    ) {
-      try {
-        await deleteCharla(id);
-      } catch (err: any) {
-        alert(err.message || "Error al eliminar charla");
-      }
-    }
-  };
 
   if (isLoading) {
     return (
@@ -407,13 +394,6 @@ const CharlasAdminView = () => {
                         >
                           <Pencil size={14} />
                           Editar
-                        </button>
-                        <button
-                          onClick={() => handleEliminar(charla.id)}
-                          className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-all whitespace-nowrap"
-                        >
-                          <Trash2 size={14} />
-                          Eliminar
                         </button>
                       </div>
                     </div>

@@ -110,6 +110,15 @@ const CreateDocumentoModal: React.FC<CreateDocumentoModalProps> = ({
                   <option value="procedimiento">Procedimiento</option>
                   <option value="instructivo">Instructivo</option>
                   <option value="manual">Manual</option>
+                  <option value="mapa_de_riesgos">Mapa de Riesgos</option>
+                  <option value="matriz_ambiental">Matriz Ambiental</option>
+                  <option value="matriz_de_epps">Matriz de EPPs</option>
+                  <option value="matriz_iperc">Matriz IPERC</option>
+                  <option value="plan_de_contingencia">Plan de Contingencia</option>
+                  <option value="planes_qhse">Planes QHSE</option>
+                  <option value="politica">Política</option>
+                  <option value="programas">Programas</option>
+                  <option value="risst">RISST</option>
                 </select>
               </div>
             </div>

@@ -3,7 +3,19 @@
 import { useEffect, useState } from "react";
 import { X, Link, Tag, Save } from "lucide-react";
 
-export type DocTipo = "procedimiento" | "instructivo" | "manual";
+export type DocTipo =
+  | "procedimiento"
+  | "instructivo"
+  | "manual"
+  | "mapa_de_riesgos"
+  | "matriz_ambiental"
+  | "matriz_de_epps"
+  | "matriz_iperc"
+  | "plan_de_contingencia"
+  | "planes_qhse"
+  | "politica"
+  | "programas"
+  | "risst";
 
 export interface DocumentoFormData {
   nombre: string;
@@ -114,6 +126,15 @@ const EditDocumentoModal: React.FC<EditDocumentoModalProps> = ({
                   <option value="procedimiento">Procedimiento</option>
                   <option value="instructivo">Instructivo</option>
                   <option value="manual">Manual</option>
+                  <option value="mapa_de_riesgos">Mapa de Riesgos</option>
+                  <option value="matriz_ambiental">Matriz Ambiental</option>
+                  <option value="matriz_de_epps">Matriz de EPPs</option>
+                  <option value="matriz_iperc">Matriz IPERC</option>
+                  <option value="plan_de_contingencia">Plan de Contingencia</option>
+                  <option value="planes_qhse">Planes QHSE</option>
+                  <option value="politica">Política</option>
+                  <option value="programas">Programas</option>
+                  <option value="risst">RISST</option>
                 </select>
               </div>
             </div>

@@ -10,6 +10,7 @@ export interface LoginResponse {
     nombre: string;
     apellido: string;
     sede: string;
+    idSede: number;
   };
 }
 

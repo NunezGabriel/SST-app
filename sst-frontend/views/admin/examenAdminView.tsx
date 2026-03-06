@@ -29,6 +29,119 @@ const emptyForm: PreguntaExamenFormData = {
   activa: true,
 };
 
+// ── Form compartido (crear / editar) ─────────────────────────────────────
+// IMPORTANT: must be defined OUTSIDE ExamenAdminView so React doesn't
+// create a new component type on every render (which would unmount the
+// inputs and cause focus loss after each keystroke).
+const FormularioPregunta = ({
+  form,
+  setForm,
+  onSave,
+  onCancel,
+  titulo,
+}: {
+  form: PreguntaExamenFormData;
+  setForm: React.Dispatch<React.SetStateAction<PreguntaExamenFormData>>;
+  onSave: () => void;
+  onCancel: () => void;
+  titulo: string;
+}) => (
+  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 space-y-4 mb-4">
+    <h3 className="font-bold text-[#003366] text-base">{titulo}</h3>
+
+    <div>
+      <label className="block text-xs font-semibold text-gray-600 mb-1">
+        Pregunta <span className="text-red-400">*</span>
+      </label>
+      <textarea
+        rows={2}
+        value={form.pregunta}
+        onChange={(e) => setForm((f) => ({ ...f, pregunta: e.target.value }))}
+        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-white resize-none"
+        placeholder="Escribe la pregunta..."
+      />
+    </div>
+
+    {(["A", "B", "C", "D"] as Opcion[]).map((op) => {
+      const key = `opcion${op}` as keyof typeof form;
+      return (
+        <div key={op}>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">
+            Opción {op}
+            {form.respuestaCorrecta === op && (
+              <span className="ml-2 text-emerald-600 text-xs">✓ Correcta</span>
+            )}
+          </label>
+          <input
+            type="text"
+            value={form[key] as string}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, [key]: e.target.value }))
+            }
+            className={`w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 bg-white ${
+              form.respuestaCorrecta === op
+                ? "border-emerald-400 focus:ring-emerald-200 bg-emerald-50"
+                : "border-gray-200 focus:ring-cyan-300"
+            }`}
+            placeholder={`Opción ${op}...`}
+          />
+        </div>
+      );
+    })}
+
+    <div>
+      <label className="block text-xs font-semibold text-gray-600 mb-1">
+        Respuesta correcta <span className="text-red-400">*</span>
+      </label>
+      <div className="relative">
+        <ChevronDown
+          size={14}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+        />
+        <select
+          value={form.respuestaCorrecta}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              respuestaCorrecta: e.target.value as Opcion,
+            }))
+          }
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-white appearance-none"
+        >
+          {(["A", "B", "C", "D"] as Opcion[]).map((op) => (
+            <option key={op} value={op}>
+              Opción {op}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div className="flex gap-3 pt-2">
+      <button
+        onClick={onCancel}
+        className="flex-1 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+      >
+        Cancelar
+      </button>
+      <button
+        onClick={onSave}
+        disabled={
+          !form.pregunta ||
+          !form.opcionA ||
+          !form.opcionB ||
+          !form.opcionC ||
+          !form.opcionD
+        }
+        className="flex-1 py-2 rounded-xl text-sm font-semibold bg-[#003366] text-white hover:bg-[#004080] transition disabled:opacity-40 flex items-center justify-center gap-2"
+      >
+        <Save size={14} />
+        Guardar
+      </button>
+    </div>
+  </div>
+);
+
 const ExamenAdminView = () => {
   const {
     preguntas,
@@ -162,111 +275,7 @@ const ExamenAdminView = () => {
     setForm(emptyForm);
   };
 
-  // ── Form compartido (crear / editar) ─────────────────────────────────────
-  const FormularioPregunta = ({
-    onSave,
-    onCancel,
-    titulo,
-  }: {
-    onSave: () => void;
-    onCancel: () => void;
-    titulo: string;
-  }) => (
-    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 space-y-4 mb-4">
-      <h3 className="font-bold text-[#003366] text-base">{titulo}</h3>
-
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Pregunta <span className="text-red-400">*</span>
-        </label>
-        <textarea
-          rows={2}
-          value={form.pregunta}
-          onChange={(e) => setForm((f) => ({ ...f, pregunta: e.target.value }))}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-white resize-none"
-          placeholder="Escribe la pregunta..."
-        />
-      </div>
-
-      {(["A", "B", "C", "D"] as Opcion[]).map((op) => {
-        const key = `opcion${op}` as keyof typeof form;
-        return (
-          <div key={op}>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Opción {op}
-              {form.respuestaCorrecta === op && (
-                <span className="ml-2 text-emerald-600 text-xs">✓ Correcta</span>
-              )}
-            </label>
-            <input
-              type="text"
-              value={form[key] as string}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, [key]: e.target.value }))
-              }
-              className={`w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 bg-white ${
-                form.respuestaCorrecta === op
-                  ? "border-emerald-400 focus:ring-emerald-200 bg-emerald-50"
-                  : "border-gray-200 focus:ring-cyan-300"
-              }`}
-              placeholder={`Opción ${op}...`}
-            />
-          </div>
-        );
-      })}
-
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Respuesta correcta <span className="text-red-400">*</span>
-        </label>
-        <div className="relative">
-          <ChevronDown
-            size={14}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-          />
-          <select
-            value={form.respuestaCorrecta}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                respuestaCorrecta: e.target.value as Opcion,
-              }))
-            }
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-white appearance-none"
-          >
-            {(["A", "B", "C", "D"] as Opcion[]).map((op) => (
-              <option key={op} value={op}>
-                Opción {op}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={onCancel}
-          className="flex-1 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={onSave}
-          disabled={
-            !form.pregunta ||
-            !form.opcionA ||
-            !form.opcionB ||
-            !form.opcionC ||
-            !form.opcionD
-          }
-          className="flex-1 py-2 rounded-xl text-sm font-semibold bg-[#003366] text-white hover:bg-[#004080] transition disabled:opacity-40 flex items-center justify-center gap-2"
-        >
-          <Save size={14} />
-          Guardar
-        </button>
-      </div>
-    </div>
-  );
+  // (FormularioPregunta moved above ExamenAdminView — see top of file)
 
   if (isLoadingPreguntas && preguntas.length === 0) {
     return (
@@ -382,6 +391,8 @@ const ExamenAdminView = () => {
             {/* Formulario de creación */}
             {creando && (
               <FormularioPregunta
+                form={form}
+                setForm={setForm}
                 titulo="Nueva Pregunta"
                 onSave={handleGuardarNueva}
                 onCancel={cancelarForm}
@@ -395,6 +406,8 @@ const ExamenAdminView = () => {
                   {/* Formulario de edición inline */}
                   {editandoId === p.id ? (
                     <FormularioPregunta
+                      form={form}
+                      setForm={setForm}
                       titulo={`Editando pregunta #${idx + 1}`}
                       onSave={handleGuardarEdit}
                       onCancel={cancelarForm}

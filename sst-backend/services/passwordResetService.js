@@ -25,7 +25,7 @@ async function solicitarRecuperacion(correo) {
 
     try {
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        from: process.env.RESEND_FROM_EMAIL || "soporte@oracleperu.org.pe",
         to: correo,
         subject: "Código de Recuperación de Contraseña - HSE App",
         html: `

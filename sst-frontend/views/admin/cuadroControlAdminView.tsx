@@ -57,9 +57,10 @@ const ShareButton = ({ monthName, rol, accentColor, token }: {
   const [loading, setLoading] = useState(false);
   const [link,    setLink]    = useState<string | null>(null);
   const [error,   setError]   = useState(false);
+  const [copied,  setCopied]  = useState(false);
 
-  const handleShare = async () => {
-    if (link) { window.open(link, "_blank"); return; }
+  const fetchLink = async (): Promise<string | null> => {
+    if (link) return link;
     setLoading(true); setError(false);
     try {
       const res = await axios.get(`${API_URL}/api/drive/link-mes`, {
@@ -67,12 +68,26 @@ const ShareButton = ({ monthName, rol, accentColor, token }: {
         params: { rol, mes: monthName },
       });
       setLink(res.data.link);
-      window.open(res.data.link, "_blank");
+      return res.data.link;
     } catch {
       setError(true);
+      return null;
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleShare = async () => {
+    const url = await fetchLink();
+    if (url) window.open(url, "_blank");
+  };
+
+  const handleCopy = async () => {
+    const url = await fetchLink();
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const baseClass = error
@@ -82,15 +97,30 @@ const ShareButton = ({ monthName, rol, accentColor, token }: {
       : "bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border border-cyan-200 hover:border-cyan-300";
 
   return (
-    <button onClick={handleShare} disabled={loading} title="Abrir carpeta del mes en Drive"
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${baseClass}`}
-    >
-      {loading ? <Loader2 size={12} className="animate-spin" />
-        : error  ? <XCircle size={12} />
-        : link   ? <ExternalLink size={12} />
-        :           <Share2 size={12} />}
-      {error ? "No encontrada" : "Acceso a Drive"}
-    </button>
+    <div className="flex items-center gap-1.5">
+      <button onClick={handleShare} disabled={loading} title="Abrir carpeta del mes en Drive"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${baseClass}`}
+      >
+        {loading ? <Loader2 size={12} className="animate-spin" />
+          : error  ? <XCircle size={12} />
+          : link   ? <ExternalLink size={12} />
+          :           <Share2 size={12} />}
+        {error ? "No encontrada" : "Acceso a Drive"}
+      </button>
+      {!error && (
+        <button onClick={handleCopy} disabled={loading}
+          title="Copiar link del mes"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            copied
+              ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+              : "bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          {copied ? <CheckCircle2 size={12} /> : <Share2 size={12} />}
+          {copied ? "¡Copiado!" : "Copiar link"}
+        </button>
+      )}
+    </div>
   );
 };
 

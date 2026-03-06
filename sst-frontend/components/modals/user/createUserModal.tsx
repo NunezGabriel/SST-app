@@ -116,6 +116,19 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
               </div>
             </div>
 
+            {/* Tipo */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tipo <span className="text-red-400">*</span></label>
+              <div className="relative">
+                <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <select name="tipo" value={form.tipo} onChange={handleChange} required
+                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none">
+                  <option value="WORKER">Worker</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+            </div>
+
             {/* Teléfono + Sede */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -127,14 +140,16 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sede <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Sede {form.tipo !== "ADMIN" && <span className="text-red-400">*</span>}
+                </label>
                 <div className="relative">
                   <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   {loadingSedes
                     ? <div className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2 text-sm text-gray-400"><Loader2 size={13} className="animate-spin" /> Cargando...</div>
                     : <>
                         <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                        <select name="idSede" value={form.idSede} onChange={handleChange} required
+                        <select name="idSede" value={form.idSede} onChange={handleChange} required={form.tipo !== "ADMIN"}
                           className="w-full pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none">
                           {sedes.length === 0
                             ? <option value={0} disabled>Sin sedes disponibles</option>
@@ -144,19 +159,11 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
                       </>
                   }
                 </div>
-              </div>
-            </div>
-
-            {/* Tipo */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tipo <span className="text-red-400">*</span></label>
-              <div className="relative">
-                <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                <select name="tipo" value={form.tipo} onChange={handleChange} required
-                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-gray-50 appearance-none">
-                  <option value="WORKER">Worker</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
+                {form.tipo === "ADMIN" && (
+                  <p className="mt-1.5 text-xs text-purple-600 font-medium flex items-center gap-1">
+                    Los administradores no pertenecen a una sede específica — puedes seleccionar cualquiera.
+                  </p>
+                )}
               </div>
             </div>
 

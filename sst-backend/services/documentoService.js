@@ -2,6 +2,7 @@ const prisma = require("../prisma");
 const documentoRepository = require("../repositories/documentoRepository");
 const visualizacionDocumentoRepository = require("../repositories/visualizacionDocumentoRepository");
 const notificacionService = require("./notificacionService");
+const logroService = require("./logroService");
 
 function listarDocumentosAdmin() {
   return documentoRepository.findAll();
@@ -81,10 +82,20 @@ async function marcarDocumentoVisto(usuarioId, documentoId) {
     return visualizacion;
   }
 
-  return visualizacionDocumentoRepository.update(visualizacion.id, {
+  const resultado = await visualizacionDocumentoRepository.update(visualizacion.id, {
     estado: "VISTO",
     fechaVisualizacion: new Date(),
   });
+
+  // Logro: "Documentos Completos" — cuando el worker ha visto todos sus documentos
+  const totalDocs  = await prisma.visualizacionDocumento.count({ where: { idUsuario: usuarioId } });
+  const vistosDocs = await prisma.visualizacionDocumento.count({ where: { idUsuario: usuarioId, estado: "VISTO" } });
+
+  if (totalDocs > 0 && vistosDocs === totalDocs) {
+    await logroService.desbloquearLogroPorNombre(usuarioId, "Documentos Completos");
+  }
+
+  return resultado;
 }
 
 module.exports = {
